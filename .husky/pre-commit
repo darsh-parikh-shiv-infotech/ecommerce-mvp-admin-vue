@@ -23,12 +23,12 @@ ok "staged files clean"
 
 # ---- 2. whole project: a type error usually starts in another file -------
 step "Type-checking project"
-npm run typecheck || die "Type check failed"
+npm run type-check || die "Type check failed"
 ok "no type errors"
 
 # ---- 3. build to a throwaway dir so the committed dist/ is left alone ----
 step "Verifying production build"
-npm run build:check || die "Build failed"
+npm run build || die "Build failed"
 ok "build succeeded"
 
 printf '\n%s\n\n' "${GREEN}${BOLD}All checks passed${RESET} ${DIM}($(( $(date +%s) - started ))s)${RESET}"
