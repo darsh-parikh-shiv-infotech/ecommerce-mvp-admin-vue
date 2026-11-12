@@ -45,3 +45,37 @@ export const COMMON_MESSAGES = {
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: "accessToken",
 } as const;
+
+export const API_ENDPOINTS = {
+  AUTH: {
+    LOGIN: "/auth/login",
+  },
+} as const;
+
+export const AUTH_MESSAGES = {
+  LOGIN_SUCCESS: "Login successful.",
+  LOGOUT_SUCCESS: "Logout successful.",
+  SESSION_EXPIRED: "Your session has expired. Please sign in again.",
+  INVALID_TOKEN: "Invalid authentication token.",
+  INVALID_CREDENTIALS: "Invalid email or password.",
+
+  EMAIL_REQUIRED: "Email is required.",
+  EMAIL_INVALID: "Please enter a valid email address.",
+  PASSWORD_REQUIRED: "Password is required.",
+} as const;
+
+export const ROUTE_NAMES = {
+  LOGIN: "login",
+  DASHBOARD: "dashboard",
+} as const;
+
+export const ROUTE_PATHS = {
+  LOGIN: "/login",
+  DASHBOARD: "/",
+} as const;
+
+export const AUTH_ERROR_CODES = {
+  INVALID_CREDENTIALS: "INVALID_CREDENTIALS",
+  INVALID_TOKEN: "INVALID_TOKEN",
+  TOKEN_EXPIRED: "TOKEN_EXPIRED",
+} as const;
