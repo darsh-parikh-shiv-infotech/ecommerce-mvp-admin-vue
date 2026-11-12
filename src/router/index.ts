@@ -4,9 +4,13 @@ import { ROUTE_NAMES, ROUTE_PATHS } from "../utils/constants";
 
 const routes = [
   {
+    path: ROUTE_PATHS.DEFAULT,
+    redirect: ROUTE_PATHS.LOGIN,
+  },
+  {
     path: ROUTE_PATHS.LOGIN,
     name: ROUTE_NAMES.LOGIN,
-    component: import("../views/auth/LoginView.vue"),
+    component: () => import("../views/auth/LoginView.vue"),
     meta: {
       guestOnly: true,
     },

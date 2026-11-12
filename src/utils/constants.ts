@@ -70,6 +70,7 @@ export const ROUTE_NAMES = {
 } as const;
 
 export const ROUTE_PATHS = {
+  DEFAULT: "/",
   LOGIN: "/login",
   DASHBOARD: "/",
 } as const;
