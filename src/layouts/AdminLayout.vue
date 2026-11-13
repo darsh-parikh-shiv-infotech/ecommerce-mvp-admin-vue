@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+
 import AdminSidebar from "../components/layout/AdminSidebar.vue";
 import AdminTopbar from "../components/layout/AdminTopbar.vue";
 import { useAuthStore } from "../store/auth.store";
@@ -33,7 +34,7 @@ async function handleLogout(): Promise<void> {
     <div class="admin-main">
       <AdminTopbar @toggle-sidebar="toggleSidebar" @logout="handleLogout" />
 
-      <main class="admin-content">
+      <main class="admin-content pa-5 pa-md-8">
         <RouterView />
       </main>
     </div>
@@ -55,22 +56,12 @@ async function handleLogout(): Promise<void> {
 
 .admin-content {
   min-height: calc(100vh - 76px);
-  padding: 32px clamp(22px, 3vw, 42px) 48px;
 }
 
+/* The sidebar becomes a drawer below the desktop breakpoint. */
 @media (max-width: 900px) {
   .admin-main {
     margin-left: 0;
-  }
-
-  .admin-content {
-    padding: 24px 20px 40px;
-  }
-}
-
-@media (max-width: 480px) {
-  .admin-content {
-    padding: 20px 15px 32px;
   }
 }
 </style>

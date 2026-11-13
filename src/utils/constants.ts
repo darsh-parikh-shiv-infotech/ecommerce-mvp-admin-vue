@@ -1,7 +1,3 @@
-import { StatusCodes } from "http-status-codes";
-
-export const HTTP_STATUS = StatusCodes;
-
 export const API_CONFIG = {
   TIMEOUT: 15000,
   AUTH_SCHEME: "Bearer",
@@ -88,4 +84,35 @@ export const AUTH_ERROR_CODES = {
 export const UI_STRINGS = {
   APP_NAME: "ecommerce",
   APP_DESCRIPTION: "STORE MANAGEMENT",
+
+  ADMIN: {
+    WORKSPACE: "Workspace",
+    OVERVIEW: "Overview",
+    SIGNED_IN_AS: "SIGNED IN AS",
+    SIGN_OUT: "Sign out",
+    FALLBACK_USER: "Store Admin",
+    OPEN_NAVIGATION: "Open navigation",
+  },
+
+  LOGIN: {
+    EYEBROW: "Ecommerce MVP",
+    TITLE: "Welcome back",
+    DESCRIPTION: "Sign in to pick up where you left off.",
+
+    EMAIL_LABEL: "Email address",
+    PASSWORD_LABEL: "Password",
+    SUBMIT: "Sign in",
+
+    SHOW_PASSWORD: "Show password",
+    HIDE_PASSWORD: "Hide password",
+
+    VISUAL_PANEL_LABEL: "Interactive avatar preview",
+
+    WELCOME_CARD_TITLE: "Good things ahead.",
+    WELCOME_CARD_DESCRIPTION: "Let's make it happen.",
+
+    STATS_CARD_TITLE: "One step at a time.",
+    STATS_FOOTER: "FOCUS ON WHAT MATTERS",
+    STATS_PROGRESS: "01 / 03",
+  },
 } as const;

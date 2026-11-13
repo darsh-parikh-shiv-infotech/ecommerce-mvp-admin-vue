@@ -1,19 +1,44 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import AnimatedAvatar from "../../components/common/AnimatedAvatar.vue";
 import { useRouter } from "vue-router";
-import { useAuthStore, type LoginCredentials } from "../../store/auth.store.ts";
+import { VIcon } from "vuetify/components";
+import { useAuthStore, type LoginCredentials } from "../../store/auth.store";
 import { toTypedSchema } from "@vee-validate/yup";
-import { loginSchema } from "../../utils/validations/auth.validation.ts";
-import { ROUTE_NAMES } from "../../utils/constants.ts";
+import { loginSchema } from "../../utils/validations/auth.validation";
+import { ROUTE_NAMES, UI_STRINGS } from "../../utils/constants";
 import { useForm } from "vee-validate";
-import { VAlert, VBtn, VForm, VIcon, VTextField } from "vuetify/components";
+import { VForm, VSnackbar } from "vuetify/components";
+import BaseButton from "../../components/common/BaseButton.vue";
+import BaseTextField from "../../components/common/BaseTextField.vue";
+import { getPlaceholder } from "../../utils/placeholder.utils";
 
 const router = useRouter();
 const authStore = useAuthStore();
 
 const loginVisualPanel = ref<HTMLElement | null>(null);
 const showPassword = ref(false);
+const showErrorSnackbar = ref(false);
+
+const isMobileViewport = ref(
+  typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches,
+);
+
+let mobileViewportQuery: MediaQueryList | null = null;
+
+function handleMobileViewportChange(event: MediaQueryListEvent): void {
+  isMobileViewport.value = event.matches;
+}
+
+onMounted(() => {
+  mobileViewportQuery = window.matchMedia("(max-width: 760px)");
+  mobileViewportQuery.addEventListener("change", handleMobileViewportChange);
+  isMobileViewport.value = mobileViewportQuery.matches;
+});
+
+onBeforeUnmount(() => {
+  mobileViewportQuery?.removeEventListener("change", handleMobileViewportChange);
+});
 
 const { defineField, handleSubmit, errors, isSubmitting } = useForm({
   validationSchema: toTypedSchema(loginSchema),
@@ -26,150 +51,141 @@ const { defineField, handleSubmit, errors, isSubmitting } = useForm({
 const [email, emailAttrs] = defineField("email");
 const [password, passwordAttrs] = defineField("password");
 
-const hasError = computed(() => Boolean(authStore.error));
-
 const submitLogin = handleSubmit(async (values: LoginCredentials) => {
   authStore.clearError();
+  showErrorSnackbar.value = false;
 
   try {
     await authStore.login(values);
     await router.replace({ name: ROUTE_NAMES.DASHBOARD });
   } catch {
-    // The auth store already normalizes and exposes the API error.
+    showErrorSnackbar.value = Boolean(authStore.error);
   }
 });
 </script>
 
 <template>
   <main class="login-demo">
-    <section class="login-form-panel">
+    <section class="login-form-panel d-grid align-center justify-center">
       <div class="login-form-content">
-        <p class="login-eyebrow">Ecommerce MVP</p>
-        <h1>Welcome back</h1>
-        <p class="login-description">Sign in to pick up where you left off.</p>
+        <p class="login-eyebrow">
+          {{ UI_STRINGS.LOGIN.EYEBROW }}
+        </p>
 
-        <v-form class="login-form" @submit.prevent="submitLogin">
-          <v-text-field
+        <h1>{{ UI_STRINGS.LOGIN.TITLE }}</h1>
+
+        <p class="login-description">
+          {{ UI_STRINGS.LOGIN.DESCRIPTION }}
+        </p>
+
+        <v-form class="login-form mt-10" @submit.prevent="submitLogin">
+          <BaseTextField
             id="email"
             v-model="email"
             v-bind="emailAttrs"
             name="email"
-            label="Email address"
+            :label="UI_STRINGS.LOGIN.EMAIL_LABEL"
             type="email"
             autocomplete="email"
-            placeholder="you@example.com"
-            variant="outlined"
-            density="comfortable"
-            hide-details="auto"
+            :placeholder="getPlaceholder(UI_STRINGS.LOGIN.EMAIL_LABEL)"
             :error-messages="errors.email"
           />
 
-          <v-text-field
+          <BaseTextField
             id="password"
             v-model="password"
             v-bind="passwordAttrs"
             name="password"
-            label="Password"
+            :label="UI_STRINGS.LOGIN.PASSWORD_LABEL"
             :type="showPassword ? 'text' : 'password'"
             autocomplete="current-password"
-            placeholder="Enter your password"
-            variant="outlined"
-            density="comfortable"
-            hide-details="auto"
+            :placeholder="getPlaceholder(UI_STRINGS.LOGIN.PASSWORD_LABEL)"
             :error-messages="errors.password"
           >
             <template #append-inner>
-              <v-btn
-                class="password-toggle"
+              <BaseButton
                 icon
                 variant="text"
                 density="compact"
-                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                size="small"
+                :block="false"
+                :aria-label="
+                  showPassword ? UI_STRINGS.LOGIN.HIDE_PASSWORD : UI_STRINGS.LOGIN.SHOW_PASSWORD
+                "
                 :aria-pressed="showPassword"
                 @click="showPassword = !showPassword"
               >
                 <v-icon :icon="showPassword ? 'mdi-eye-off-outline' : 'mdi-eye-outline'" />
-              </v-btn>
+              </BaseButton>
             </template>
-          </v-text-field>
+          </BaseTextField>
 
-          <v-alert
-            v-if="hasError"
-            type="error"
-            variant="tonal"
-            density="compact"
-            class="login-error"
-          >
-            {{ authStore.error }}
-          </v-alert>
-          <v-btn
-            class="login-submit"
-            type="submit"
-            color="#282735"
-            variant="flat"
-            size="large"
-            block
-            :loading="isSubmitting"
-            :disabled="isSubmitting"
-          >
-            Sign in
-          </v-btn>
+          <BaseButton type="submit" :loading="isSubmitting" :disabled="isSubmitting">
+            {{ UI_STRINGS.LOGIN.SUBMIT }}
+          </BaseButton>
         </v-form>
-
-        <!-- <p class="login-nav-links">
-          <a href="#forgot-password">Forgot password?</a>
-        </p> -->
       </div>
     </section>
 
     <section
+      v-if="!isMobileViewport"
       ref="loginVisualPanel"
       class="login-visual-panel"
-      aria-label="Interactive avatar preview"
+      :aria-label="UI_STRINGS.LOGIN.VISUAL_PANEL_LABEL"
     >
       <AnimatedAvatar :tracking-target="loginVisualPanel" variant="login" />
 
-      <div class="float-card float-card--welcome">
+      <div class="float-card float-card--welcome d-flex align-center ga-3">
         <div class="card-icon card-icon--sun">✳</div>
-        <div class="card-copy">
-          <strong>Good things ahead.</strong>
-          <span class="card-subtitle">Let's make it happen.</span>
+
+        <div class="card-copy d-flex flex-column">
+          <strong>{{ UI_STRINGS.LOGIN.WELCOME_CARD_TITLE }}</strong>
+          <span class="card-subtitle">
+            {{ UI_STRINGS.LOGIN.WELCOME_CARD_DESCRIPTION }}
+          </span>
         </div>
       </div>
 
-      <div class="float-card float-card--stats">
-        <strong>One step at a time.</strong>
+      <div class="float-card float-card--stats d-flex flex-column">
+        <strong>{{ UI_STRINGS.LOGIN.STATS_CARD_TITLE }}</strong>
+
         <div class="progress-track">
           <span></span>
         </div>
-        <div class="stats-bottom">
-          <span>FOCUS ON WHAT MATTERS</span>
-          <span>01 / 03</span>
+
+        <div class="stats-bottom d-flex align-center justify-space-between">
+          <span>{{ UI_STRINGS.LOGIN.STATS_FOOTER }}</span>
+          <span>{{ UI_STRINGS.LOGIN.STATS_PROGRESS }}</span>
         </div>
       </div>
     </section>
   </main>
+
+  <v-snackbar v-model="showErrorSnackbar" color="error" location="top end" :timeout="4000">
+    {{ authStore.error }}
+  </v-snackbar>
 </template>
 
 <style scoped>
-:global(body) {
-  margin: 0;
-}
-
 .login-demo {
-  display: grid;
   min-height: 100vh;
   min-height: 100svh;
+  display: grid;
   grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.1fr);
   overflow: hidden;
   background: #f6f5f2;
   color: #24242d;
 }
 
+.login-form {
+  display: grid;
+  gap: 16px;
+}
+
 .login-form-panel {
   display: grid;
   align-items: center;
-  justify-items: center;
+  justify-content: center;
   padding: clamp(28px, 6vw, 88px);
 }
 
@@ -198,72 +214,6 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
   font-size: 15px;
 }
 
-.login-form {
-  display: grid;
-  gap: 16px;
-  margin-top: 40px;
-}
-
-.login-form :deep(.v-field) {
-  border-radius: 12px;
-  background: #fffefa;
-}
-
-.login-form :deep(.v-field__input) {
-  min-height: 56px;
-  font-size: 13px;
-}
-
-.login-form :deep(.v-field__outline) {
-  color: #e9e6e2;
-}
-
-.login-form :deep(.v-field--focused .v-field__outline) {
-  color: #a495cf;
-}
-
-.login-form :deep(.v-label) {
-  font-size: 13px;
-}
-
-.login-form :deep(.v-messages__message) {
-  font-size: 11px;
-}
-
-.password-toggle {
-  color: #99939e;
-}
-
-.password-toggle:hover {
-  color: #7765a8;
-}
-
-.login-error {
-  margin-top: 2px;
-}
-
-.login-submit {
-  height: 52px !important;
-  margin-top: 4px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.login-nav-links {
-  margin-top: 24px;
-  color: #77747b;
-  font-size: 13px;
-  text-align: center;
-}
-
-.login-nav-links a {
-  color: #6d64b0;
-  text-decoration: none;
-}
-
 .login-visual-panel {
   position: relative;
   height: 100vh;
@@ -276,8 +226,6 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
 .float-card {
   position: absolute;
   z-index: 4;
-  display: flex;
-  align-items: center;
   border: 1px solid #ffffff22;
   border-radius: 13px;
   background: #ffffffed;
@@ -290,7 +238,6 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
 .float-card--welcome {
   top: 17%;
   left: 7%;
-  gap: 12px;
   padding: 14px 16px;
 }
 
@@ -307,7 +254,6 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
 }
 
 .card-copy {
-  display: grid;
   gap: 5px;
 }
 
@@ -326,7 +272,6 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
   right: 7%;
   bottom: 14%;
   width: min(215px, 60%);
-  flex-direction: column;
   align-items: stretch;
   gap: 11px;
   padding: 16px;
@@ -334,9 +279,6 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
 }
 
 .stats-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   color: #aaa3ae;
   font-size: 6px;
 }
@@ -388,18 +330,13 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
     padding: 56px 24px;
   }
 
+  .login-form-content,
+  .login-form {
+    min-width: 0;
+  }
+
   .login-form-content h1 {
     margin-top: 32px;
-  }
-
-  .login-visual-panel {
-    height: min(68vh, 480px);
-    min-height: 320px;
-  }
-
-  .float-card {
-    width: min(200px, 38%);
-    padding: 14px;
   }
 }
 

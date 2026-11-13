@@ -3,25 +3,15 @@ import axios from "axios";
 
 import { storageUtils } from "../utils/storage.utils";
 import { API_CONFIG, COMMON_MESSAGES } from "../utils/constants";
-import { ApiError, normalizeApiError } from "./api-error";
+import { createApiError, normalizeApiError } from "./api-error";
+import { StatusCodes } from "http-status-codes";
 
-const baseURL = "/api";
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 export interface ApiResponse<T> {
   statusCode?: number;
   message?: string;
   data: T;
-}
-export interface ApiErrorResponse {
-  statusCode?: number;
-  status?: string;
-  message?: string;
-  error?: string;
-  errors?: Record<string, string[]>;
-}
-
-if (!baseURL) {
-  throw new Error("VITE_API_BASE_URL is not configured.");
 }
 
 const api = axios.create({
@@ -38,13 +28,11 @@ api.interceptors.request.use(handleRequest, handleRequestError);
 api.interceptors.response.use((response) => {
   const data = response.data;
 
-  if (typeof data?.statusCode === "number" && data.statusCode >= 400) {
-    return Promise.reject(
-      new ApiError({
-        message: data.message || COMMON_MESSAGES.ERROR.GENERAL,
-        statusCode: data.statusCode,
-      }),
-    );
+  if (typeof data?.statusCode === "number" && data.statusCode >= StatusCodes.BAD_REQUEST) {
+    throw createApiError({
+      message: data.message || COMMON_MESSAGES.ERROR.GENERAL,
+      statusCode: data.statusCode,
+    });
   }
 
   return response;

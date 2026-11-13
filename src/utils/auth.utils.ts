@@ -1,7 +1,9 @@
 import { jwtDecode } from "jwt-decode";
+
 import { AUTH_ERROR_CODES, AUTH_MESSAGES } from "./constants";
-import { ApiError } from "../api/api-error";
+
 import type { AuthUser } from "../store/auth.store";
+import { createApiError } from "../api/api-error";
 
 export interface AuthTokenPayload {
   sub?: string;
@@ -18,7 +20,7 @@ export function decodeAuthToken(token: string): AuthTokenPayload {
   try {
     return jwtDecode<AuthTokenPayload>(token);
   } catch {
-    throw new ApiError({
+    throw createApiError({
       message: AUTH_MESSAGES.INVALID_TOKEN,
       statusCode: AUTH_ERROR_CODES.INVALID_TOKEN,
     });
@@ -37,20 +39,22 @@ export function getAuthUser(token: string): AuthUser {
   const payload = decodeAuthToken(token);
 
   if (isTokenExpired(payload)) {
-    throw new ApiError({
+    throw createApiError({
       message: AUTH_MESSAGES.SESSION_EXPIRED,
       statusCode: AUTH_ERROR_CODES.TOKEN_EXPIRED,
     });
   }
 
-  const id = payload.id ?? payload.sub;
+  const rawId = payload.id ?? payload.sub;
+  const id =
+    typeof rawId === "string" && rawId.trim()
+      ? rawId
+      : typeof rawId === "number"
+        ? String(rawId)
+        : null;
 
-  if (
-    typeof id !== "number" ||
-    typeof payload.email !== "string" ||
-    typeof payload.role !== "string"
-  ) {
-    throw new ApiError({
+  if (!id || typeof payload.email !== "string" || typeof payload.role !== "string") {
+    throw createApiError({
       message: AUTH_MESSAGES.INVALID_TOKEN,
       statusCode: AUTH_ERROR_CODES.INVALID_TOKEN,
     });
