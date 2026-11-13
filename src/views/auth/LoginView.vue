@@ -116,13 +116,17 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
           </v-btn>
         </v-form>
 
-        <p class="login-nav-links">
+        <!-- <p class="login-nav-links">
           <a href="#forgot-password">Forgot password?</a>
-        </p>
+        </p> -->
       </div>
     </section>
 
-    <section class="login-visual-panel" aria-label="Interactive avatar preview">
+    <section
+      ref="loginVisualPanel"
+      class="login-visual-panel"
+      aria-label="Interactive avatar preview"
+    >
       <AnimatedAvatar :tracking-target="loginVisualPanel" variant="login" />
 
       <div class="float-card float-card--welcome">

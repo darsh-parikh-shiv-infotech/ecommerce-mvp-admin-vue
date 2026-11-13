@@ -2,18 +2,19 @@ import type { InternalAxiosRequestConfig } from "axios";
 import axios from "axios";
 
 import { storageUtils } from "../utils/storage.utils";
-import { API_CONFIG } from "../utils/constants";
-import { normalizeApiError } from "./api-error";
+import { API_CONFIG, COMMON_MESSAGES } from "../utils/constants";
+import { ApiError, normalizeApiError } from "./api-error";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL;
+const baseURL = "/api";
 
 export interface ApiResponse<T> {
-  code?: number;
+  statusCode?: number;
   message?: string;
   data: T;
 }
 export interface ApiErrorResponse {
-  code?: string | number;
+  statusCode?: number;
+  status?: string;
   message?: string;
   error?: string;
   errors?: Record<string, string[]>;
@@ -34,7 +35,20 @@ const api = axios.create({
 
 api.interceptors.request.use(handleRequest, handleRequestError);
 
-api.interceptors.response.use((response) => response, handleResponseError);
+api.interceptors.response.use((response) => {
+  const data = response.data;
+
+  if (typeof data?.statusCode === "number" && data.statusCode >= 400) {
+    return Promise.reject(
+      new ApiError({
+        message: data.message || COMMON_MESSAGES.ERROR.GENERAL,
+        statusCode: data.statusCode,
+      }),
+    );
+  }
+
+  return response;
+}, handleResponseError);
 
 function handleRequest(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
   const token = storageUtils.getAccessToken();

@@ -48,7 +48,7 @@ export const STORAGE_KEYS = {
 
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: "/auth/login",
+    LOGIN: "/auth-user/login",
   },
 } as const;
 
@@ -67,16 +67,25 @@ export const AUTH_MESSAGES = {
 export const ROUTE_NAMES = {
   LOGIN: "login",
   DASHBOARD: "dashboard",
+  PRODUCTS: "products",
+  CATEGORIES: "categories",
 } as const;
 
 export const ROUTE_PATHS = {
   DEFAULT: "/",
   LOGIN: "/login",
   DASHBOARD: "/dashboard",
+  PRODUCTS: "/products",
+  CATEGORIES: "/categories",
 } as const;
 
 export const AUTH_ERROR_CODES = {
   INVALID_CREDENTIALS: "INVALID_CREDENTIALS",
   INVALID_TOKEN: "INVALID_TOKEN",
   TOKEN_EXPIRED: "TOKEN_EXPIRED",
+} as const;
+
+export const UI_STRINGS = {
+  APP_NAME: "ecommerce",
+  APP_DESCRIPTION: "STORE MANAGEMENT",
 } as const;

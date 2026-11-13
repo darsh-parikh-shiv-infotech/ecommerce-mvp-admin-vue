@@ -2,11 +2,12 @@ import { defineStore } from "pinia";
 import { storageUtils } from "../utils/storage.utils";
 import { getAuthUser } from "../utils/auth.utils";
 import { authService } from "../api/services";
-import { normalizeApiError } from "../api/api-error";
+import { ApiError, normalizeApiError } from "../api/api-error";
 
 export interface LoginCredentials {
   email: string;
   password: string;
+  role?: "Admin" | "User" | "Vendor";
 }
 
 export interface AuthUser {
@@ -17,7 +18,7 @@ export interface AuthUser {
 }
 
 export interface AuthLoginResponse {
-  accessToken: string;
+  token: string;
 }
 
 export interface AuthState {
@@ -59,19 +60,17 @@ export const useAuthStore = defineStore("auth", {
       this.error = null;
 
       try {
-        const response = await authService.login(credentials);
-
-        const token = response.accessToken;
+        const response = await authService.login({ ...credentials, role: "Admin" });
+        console.log(response);
+        const token = response.token;
         const user = getAuthUser(token);
-
         storageUtils.setAccessToken(token);
 
         this.accessToken = token;
         this.user = user;
         this.isInitialized = true;
       } catch (error: unknown) {
-        const apiError = normalizeApiError(error);
-
+        const apiError = error instanceof ApiError ? error : normalizeApiError(error);
         this.error = apiError.message;
         throw apiError;
       } finally {

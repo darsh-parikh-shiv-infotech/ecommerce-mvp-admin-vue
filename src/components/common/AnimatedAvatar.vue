@@ -270,15 +270,28 @@ function updateCameraFraming(): void {
   const size = bounds.getSize(new Vector3());
   const center = bounds.getCenter(new Vector3());
 
-  const visibleHeight = Math.max(size.y, size.x / Math.max(camera.aspect, 0.01)) * CAMERA_PADDING;
+  const sidebarMode = props.variant === "sidebar";
+  const target = center.clone();
+
+  let visibleHeight: number;
+
+  if (sidebarMode) {
+    // Focus on the upper body: head, shoulders and torso down to the waist.
+    target.y = bounds.min.y + size.y * 0.72;
+
+    // Crop the lower body while keeping the character's width visible.
+    visibleHeight = Math.max(size.y * 0.62, size.x / Math.max(camera.aspect, 0.01));
+  } else {
+    visibleHeight = Math.max(size.y, size.x / Math.max(camera.aspect, 0.01)) * CAMERA_PADDING;
+  }
 
   const fieldOfView = MathUtils.degToRad(camera.fov);
 
   const margin = Math.max(size.length() * 0.02, 0.01);
   const distance = visibleHeight / (2 * Math.tan(fieldOfView / 2)) + size.z / 2 + margin;
 
-  camera.position.set(center.x, center.y, center.z + distance);
-  camera.lookAt(center);
+  camera.position.set(target.x, target.y, target.z + distance);
+  camera.lookAt(target);
   camera.near = Math.max(0.01, distance - size.z / 2 - margin);
   camera.far = distance + size.z / 2 + margin;
 

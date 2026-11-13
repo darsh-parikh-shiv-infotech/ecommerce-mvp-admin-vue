@@ -1,12 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../store/auth.store.ts";
 import { ROUTE_NAMES, ROUTE_PATHS } from "../utils/constants";
+import AdminLayout from "../layouts/AdminLayout.vue";
 
 const routes = [
-  {
-    path: ROUTE_PATHS.DEFAULT,
-    redirect: ROUTE_PATHS.LOGIN,
-  },
   {
     path: ROUTE_PATHS.LOGIN,
     name: ROUTE_NAMES.LOGIN,
@@ -16,12 +13,43 @@ const routes = [
     },
   },
   {
-    path: ROUTE_PATHS.DASHBOARD,
-    name: ROUTE_NAMES.DASHBOARD,
-    component: () => import("../views/dashboard/DashboardView.vue"),
+    path: ROUTE_PATHS.DEFAULT,
+    component: AdminLayout,
     meta: {
       requiresAuth: true,
     },
+    children: [
+      {
+        path: "",
+        redirect: { name: ROUTE_NAMES.DASHBOARD },
+      },
+      {
+        path: "dashboard",
+        name: ROUTE_NAMES.DASHBOARD,
+        component: () => import("../views/dashboard/DashboardView.vue"),
+        meta: {
+          title: "Overview",
+        },
+      },
+      /*
+      {
+        path: "products",
+        name: ROUTE_NAMES.PRODUCTS,
+        component: () => import("../views/common/ComingSoonView.vue"),
+        meta: {
+          title: "Products",
+        },
+      },
+      {
+        path: "categories",
+        name: ROUTE_NAMES.CATEGORIES,
+        component: () => import("../views/common/ComingSoonView.vue"),
+        meta: {
+          title: "Categories",
+        },
+      },
+      */
+    ],
   },
 ];
 

@@ -8,7 +8,7 @@ import { API_ERROR_CODES, COMMON_MESSAGES } from "../utils/constants";
 export interface ApiErrorOptions {
   message: string;
   status?: number;
-  code?: string | number;
+  statusCode?: string | number;
   errors?: Record<string, string[]>;
   config?: AxiosRequestConfig;
   isNetworkError?: boolean;
@@ -18,7 +18,7 @@ export interface ApiErrorOptions {
 
 export class ApiError extends Error {
   readonly status?: number;
-  readonly code?: string | number;
+  readonly statusCode?: string | number;
   readonly errors?: Record<string, string[]>;
   readonly config?: AxiosRequestConfig;
   readonly isNetworkError: boolean;
@@ -30,7 +30,7 @@ export class ApiError extends Error {
 
     this.name = "ApiError";
     this.status = options.status;
-    this.code = options.code;
+    this.statusCode = options.statusCode;
     this.errors = options.errors;
     this.config = options.config;
     this.isNetworkError = options.isNetworkError ?? false;
@@ -52,7 +52,7 @@ export function normalizeApiError(error: unknown): ApiError {
   if (axios.isCancel(error)) {
     return new ApiError({
       message: COMMON_MESSAGES.ERROR.CANCELLED,
-      code: API_ERROR_CODES.REQUEST_CANCELLED,
+      statusCode: API_ERROR_CODES.REQUEST_CANCELLED,
       isCancelled: true,
     });
   }
@@ -60,7 +60,7 @@ export function normalizeApiError(error: unknown): ApiError {
   if (!axios.isAxiosError(error)) {
     return new ApiError({
       message: COMMON_MESSAGES.ERROR.GENERAL,
-      code: API_ERROR_CODES.UNKNOWN_ERROR,
+      statusCode: API_ERROR_CODES.UNKNOWN_ERROR,
     });
   }
 
@@ -72,7 +72,7 @@ export function normalizeApiError(error: unknown): ApiError {
 
     return new ApiError({
       message: isTimeout ? COMMON_MESSAGES.ERROR.TIMEOUT : COMMON_MESSAGES.ERROR.NETWORK,
-      code: isTimeout ? API_ERROR_CODES.TIMEOUT_ERROR : API_ERROR_CODES.NETWORK_ERROR,
+      statusCode: isTimeout ? API_ERROR_CODES.TIMEOUT_ERROR : API_ERROR_CODES.NETWORK_ERROR,
       config: error.config,
       isNetworkError: !isTimeout,
       isTimeout,
@@ -96,11 +96,11 @@ export function normalizeApiError(error: unknown): ApiError {
 
   return new ApiError({
     message:
-      (typeof body.message === "string" && body.message) ||
-      (typeof body.error === "string" && body.error) ||
+      (typeof body.message === "string" && body.message.trim()) ||
+      (typeof body.error === "string" && body.error.trim()) ||
       fallbackMessage,
     status,
-    code: body.code,
+    statusCode: body.statusCode ?? body.statusCode,
     errors: body.errors,
     config: error.config,
   });

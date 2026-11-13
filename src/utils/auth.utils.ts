@@ -20,7 +20,7 @@ export function decodeAuthToken(token: string): AuthTokenPayload {
   } catch {
     throw new ApiError({
       message: AUTH_MESSAGES.INVALID_TOKEN,
-      code: AUTH_ERROR_CODES.INVALID_TOKEN,
+      statusCode: AUTH_ERROR_CODES.INVALID_TOKEN,
     });
   }
 }
@@ -39,20 +39,20 @@ export function getAuthUser(token: string): AuthUser {
   if (isTokenExpired(payload)) {
     throw new ApiError({
       message: AUTH_MESSAGES.SESSION_EXPIRED,
-      code: AUTH_ERROR_CODES.TOKEN_EXPIRED,
+      statusCode: AUTH_ERROR_CODES.TOKEN_EXPIRED,
     });
   }
 
   const id = payload.id ?? payload.sub;
 
   if (
-    typeof id !== "string" ||
+    typeof id !== "number" ||
     typeof payload.email !== "string" ||
     typeof payload.role !== "string"
   ) {
     throw new ApiError({
       message: AUTH_MESSAGES.INVALID_TOKEN,
-      code: AUTH_ERROR_CODES.INVALID_TOKEN,
+      statusCode: AUTH_ERROR_CODES.INVALID_TOKEN,
     });
   }
 

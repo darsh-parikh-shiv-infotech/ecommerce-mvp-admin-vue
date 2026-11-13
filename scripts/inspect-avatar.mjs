@@ -108,41 +108,4 @@ for (const result of results) {
   const changedBufferViews = result.bufferViewHashes.filter((view, index) => {
     return view.hash !== reference.bufferViewHashes[index]?.hash;
   });
-
-  console.log("\n========================================");
-  console.log(`FILE: ${result.filename}`);
-  console.log(`SIZE: ${result.sizeMB} MB`);
-  console.log(`BINARY HASH: ${result.binaryHash}`);
-  console.log(`CHANGED NODES: ${changedNodes.length}`);
-
-  if (changedNodes.length) {
-    console.log(JSON.stringify(changedNodes, null, 2));
-  }
-
-  console.log(`CHANGED BUFFER VIEWS: ${changedBufferViews.length}`);
-
-  if (changedBufferViews.length) {
-    console.log(JSON.stringify(changedBufferViews, null, 2));
-  }
-
-  console.log("SKELETON:");
-  console.log(JSON.stringify(result.skinDetails, null, 2));
-
-  console.log("ANIMATIONS:", result.animationNames);
-}
-
-console.log("\n========================================");
-console.log("COMPARISON AGAINST:", reference.filename);
-
-for (const result of results.slice(1)) {
-  console.log(`\n${result.filename}`);
-  console.log("Same binary:", result.binaryHash === reference.binaryHash);
-  console.log(
-    "Same meshes:",
-    JSON.stringify(result.meshHashes) === JSON.stringify(reference.meshHashes),
-  );
-  console.log(
-    "Same skeleton:",
-    JSON.stringify(result.skinDetails) === JSON.stringify(reference.skinDetails),
-  );
 }
