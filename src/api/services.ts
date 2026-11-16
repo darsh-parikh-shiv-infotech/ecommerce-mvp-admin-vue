@@ -1,11 +1,11 @@
+import type { AttributeSetPayload } from "../store/attribute-set.store";
+import type { AuthLoginResponse, LoginCredentials } from "../store/auth.store";
 import type {
   Attribute,
   AttributeSet,
-  AttributeSetPayload,
   PaginationData,
   PaginationRequest,
-} from "../store/attribute-set.store";
-import type { AuthLoginResponse, LoginCredentials } from "../store/auth.store";
+} from "../store/common.types";
 import { API_ENDPOINTS } from "../utils/constants";
 import api, { type ApiResponse } from "./axios";
 
@@ -39,11 +39,11 @@ export const attributeSetService = {
     return response.data.data;
   },
 
-  createAtrributeSet: async (payload: AttributeSetPayload): Promise<void> => {
+  createAttributeSet: async (payload: AttributeSetPayload): Promise<void> => {
     await api.post(API_ENDPOINTS.ATTRIBUTE_SET.CREATE, payload);
   },
 
   updateAttributeSet: async (id: number, payload: AttributeSetPayload): Promise<void> => {
-    await api.post(API_ENDPOINTS.ATTRIBUTE_SET.UPDATE(id), payload);
+    await api.put(API_ENDPOINTS.ATTRIBUTE_SET.UPDATE(id), payload);
   },
 };

@@ -1,37 +1,14 @@
 import { defineStore } from "pinia";
 import { attributeSetService } from "../api/services";
 import { isApiError, normalizeApiError } from "../api/api-error";
-
-export interface PaginationRequest {
-  sortValue?: "asc" | "desc";
-  sortKey?: string;
-  page?: number;
-  limit?: number;
-  search?: string;
-}
-
-export interface PaginationData<T> {
-  rows: T[];
-  totalItems: number;
-  totalPages: number;
-  currentPage: number;
-  pageSize: number;
-  numberOfRows: number;
-}
-
-export interface Attribute {
-  id: number;
-  name: string;
-}
-
-export interface AttributeSet {
-  id: number;
-  name: string;
-  status: "active" | "inactive";
-  createdAt: string;
-  updatedAt: string;
-  attributes: Attribute[];
-}
+import {
+  DEFAULT_PARAMS,
+  EMPTY_PAGINATION,
+  type Attribute,
+  type AttributeSet,
+  type PaginationData,
+  type PaginationRequest,
+} from "./common.types";
 
 export interface AttributeSetPayload {
   name: string;
@@ -54,21 +31,6 @@ interface AttributeSetState {
   };
   error: string | null;
 }
-
-const DEFAULT_PARAMS: PaginationRequest = {
-  sortValue: "desc",
-  sortKey: "id",
-  page: 1,
-  limit: 10,
-};
-
-const EMPTY_PAGINATION = {
-  totalItems: 0,
-  totalPages: 0,
-  currentPage: 1,
-  pageSize: 10,
-  numberOfRows: 0,
-};
 
 export const useAttributeSetStore = defineStore("attributeSet", {
   state: (): AttributeSetState => ({
@@ -161,7 +123,7 @@ export const useAttributeSetStore = defineStore("attributeSet", {
       this.error = null;
 
       try {
-        await attributeSetService.createAtrributeSet(payload);
+        await attributeSetService.createAttributeSet(payload);
       } catch (error: unknown) {
         const apiError = isApiError(error) ? error : normalizeApiError(error);
 

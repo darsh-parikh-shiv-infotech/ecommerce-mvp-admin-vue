@@ -11,6 +11,14 @@ export const API_CONFIG = {
   },
 } as const;
 
+export const PAGINATION_CONFIG = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 10,
+  DEFAULT_SORT_KEY: "id",
+  DEFAULT_SORT_VALUE: "desc",
+  ITEMS_PER_PAGE_OPTIONS: [5, 10, 20, 50],
+} as const;
+
 export const API_ERROR_CODES = {
   NETWORK_ERROR: "NETWORK_ERROR",
   TIMEOUT_ERROR: "TIMEOUT_ERROR",
@@ -51,6 +59,13 @@ export const API_ENDPOINTS = {
     CREATE: "/attribute/add-attribute-set",
     UPDATE: (id: number) => `/attribute/update-attribute-set/${id}`,
     ATTRIBUTES: "/attribute/list-Of-attributes",
+  },
+  PRODUCT: {
+    LIST: "/product/list-of-product",
+    FETCH_SINGLE: (id: number) => `/product/view-product/${id}`,
+    UPDATE: (id: number) => `/product/update-product/${id}`,
+    CREATE: "/product/add-product",
+    DELETE_VARIANT: (id: number) => `/product/delete-variant/${id}`,
   },
 } as const;
 

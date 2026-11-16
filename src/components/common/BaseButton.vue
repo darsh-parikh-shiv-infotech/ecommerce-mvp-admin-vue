@@ -23,6 +23,7 @@ defineOptions({ inheritAttrs: false });
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
+  flex: 0 0 auto;
 }
 
 .base-button.v-btn--size-small:not(.v-btn--icon) {

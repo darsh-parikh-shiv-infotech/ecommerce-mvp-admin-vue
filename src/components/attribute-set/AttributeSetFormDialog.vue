@@ -10,6 +10,7 @@ import {
   VRadioGroup,
   VRadio,
   VIcon,
+  VSpacer,
 } from "vuetify/components";
 
 import BaseButton from "../common/BaseButton.vue";
@@ -18,8 +19,9 @@ import BaseTextField from "../common/BaseTextField.vue";
 import { UI_STRINGS } from "../../utils/constants";
 import { getPlaceholder } from "../../utils/placeholder.utils";
 
-import type { Attribute, AttributeSet, AttributeSetPayload } from "../../store/attribute-set.store";
+import type { AttributeSetPayload } from "../../store/attribute-set.store";
 import { useAttributeSetForm } from "../../utils/composables/useAttributeSetForm.ts";
+import type { Attribute, AttributeSet } from "../../store/common.types.ts";
 
 const props = defineProps<{
   modelValue: boolean;
@@ -161,14 +163,14 @@ const submitForm = handleSubmit((values) => {
         <BaseButton
           variant="outlined"
           size="small"
-          block="false"
+          :block="false"
           :disabled="loading"
           @click="closeDialog"
         >
           {{ UI_STRINGS.ATTRIBUTE_SET.CANCEL }}
         </BaseButton>
 
-        <BaseButton size="small" block="false" :loading="loading" @click="submitForm">
+        <BaseButton size="small" :block="false" :loading="loading" @click="submitForm">
           {{ UI_STRINGS.ATTRIBUTE_SET.SAVE }}
         </BaseButton>
       </v-card-actions>

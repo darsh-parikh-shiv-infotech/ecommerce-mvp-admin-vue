@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { VDataTableServer } from "vuetify/components";
+import { PAGINATION_CONFIG } from "../../utils/constants";
 
 export interface BaseTableHeader {
   title: string;
@@ -21,6 +22,7 @@ withDefaults(
     itemValue?: string;
     emptyText?: string;
     hideFooter?: boolean;
+    itemsPerPageOptions?: number[];
   }>(),
   {
     loading: false,
@@ -29,6 +31,7 @@ withDefaults(
     itemValue: "id",
     emptyText: "No records found.",
     hideFooter: false,
+    itemsPerPageOptions: () => [...PAGINATION_CONFIG.ITEMS_PER_PAGE_OPTIONS],
   },
 );
 
@@ -59,8 +62,7 @@ const emit = defineEmits<{
       :loading-text="'Loading records...'"
       :no-data-text="emptyText"
       class="base-data-table"
-      @update:page="emit('update:page', $event)"
-      @update:items-per-page="emit('update:itemsPerPage', $event)"
+      :items-per-page-options="itemsPerPageOptions"
       @update:options="emit('update:options', $event)"
     >
       <template v-for="(_, slotName) in $slots" #[slotName]="slotProps">
@@ -80,6 +82,10 @@ const emit = defineEmits<{
 
 .base-data-table {
   min-width: 680px;
+}
+
+.base-data-table :deep(.v-table__wrapper) {
+  overflow-x: hidden;
 }
 
 .base-data-table :deep(th) {

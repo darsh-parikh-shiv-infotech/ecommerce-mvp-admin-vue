@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import BaseButton from "../../components/common/BaseButton.vue";
 import BaseTable, { type BaseTableHeader } from "../../components/common/BaseTable.vue";
 import BaseTextField from "../../components/common/BaseTextField.vue";
 import AttributeSetFormDialog from "../../components/attribute-set/AttributeSetFormDialog.vue";
-import {
-  useAttributeSetStore,
-  type AttributeSet,
-  type AttributeSetPayload,
-} from "../../store/attribute-set.store.ts";
-import { UI_STRINGS } from "../../utils/constants.ts";
+import { useAttributeSetStore, type AttributeSetPayload } from "../../store/attribute-set.store.ts";
+import { PAGINATION_CONFIG, UI_STRINGS } from "../../utils/constants.ts";
 import { getPlaceholder } from "../../utils/placeholder.utils.ts";
 import { VChip, VIcon, VSnackbar } from "vuetify/components";
+import { useDebounce } from "../../utils/composables/useDebounce.ts";
+import type { AttributeSet } from "../../store/common.types.ts";
 
 const store = useAttributeSetStore();
 const itemSlots = {
@@ -27,6 +25,20 @@ const headers: BaseTableHeader[] = [
   { title: "Created", key: "createdAt", minWidth: 130 },
   { title: "Actions", key: "actions", align: "end", sortable: false },
 ];
+interface AttributeSetQuery {
+  page?: number;
+  limit?: number;
+  sortKey?: string;
+  sortValue?: "asc" | "desc";
+}
+interface TableOptions {
+  page: number;
+  itemsPerPage: number;
+  sortBy: {
+    key: string;
+    order: "asc" | "desc";
+  }[];
+}
 
 const search = ref("");
 const dialogOpen = ref(false);
@@ -37,10 +49,18 @@ const snackbarColor = ref<"success" | "error">("success");
 
 const attributeSets = computed(() => store.attributeSets);
 const pagination = computed(() => store.pagination);
+const tableQuery = ref<AttributeSetQuery>({
+  page: PAGINATION_CONFIG.DEFAULT_PAGE,
+  limit: PAGINATION_CONFIG.DEFAULT_LIMIT,
+  sortKey: PAGINATION_CONFIG.DEFAULT_SORT_KEY,
+  sortValue: PAGINATION_CONFIG.DEFAULT_SORT_VALUE,
+});
 
 const isSaving = computed(
   () => store.loading.createAttributeSet || store.loading.updateAttributeSet,
 );
+
+const debouncedSearch = useDebounce(search, 400);
 
 const dateFormatter = new Intl.DateTimeFormat("en-IN", {
   day: "2-digit",
@@ -62,21 +82,11 @@ function notify(message: string, color: "success" | "error" = "success") {
   showSnackbar.value = true;
 }
 
-async function loadAttributeSets(page = 1) {
+async function loadAttributeSets(query: Partial<AttributeSetQuery> = {}) {
+  Object.assign(tableQuery.value, query);
   try {
     await store.fetchAttributeSets({
-      page,
-      search: search.value.trim() || undefined,
-    });
-  } catch {
-    notify(store.error || UI_STRINGS.ATTRIBUTE_SET.FETCH_ERROR, "error");
-  }
-}
-async function handleItemsPerPageChange(limit: number) {
-  try {
-    await store.fetchAttributeSets({
-      page: 1,
-      limit,
+      ...tableQuery.value,
       search: search.value.trim() || undefined,
     });
   } catch {
@@ -84,12 +94,15 @@ async function handleItemsPerPageChange(limit: number) {
   }
 }
 
-async function handleSearch() {
-  await loadAttributeSets(1);
-}
+function handleTableOptions(options: TableOptions) {
+  const sorting = options.sortBy[0];
 
-async function handlePageChange(page: number) {
-  await loadAttributeSets(page);
+  loadAttributeSets({
+    page: options.page,
+    limit: options.itemsPerPage,
+    sortKey: sorting?.key ?? "id",
+    sortValue: sorting?.order ?? "desc",
+  });
 }
 
 async function ensureAttributesLoaded() {
@@ -134,14 +147,18 @@ async function handleSave(payload: AttributeSetPayload) {
     dialogOpen.value = false;
     editingAttributeSet.value = null;
 
-    await loadAttributeSets(wasEditing ? pagination.value.currentPage : 1);
+    await loadAttributeSets({ page: wasEditing ? pagination.value.currentPage : 1 });
   } catch {
     notify(store.error || "Unable to save attribute set.", "error");
   }
 }
 
-onMounted(async () => {
-  await loadAttributeSets(1);
+watch(debouncedSearch, () => {
+  loadAttributeSets({ page: 1 });
+});
+
+onMounted(() => {
+  loadAttributeSets({ page: 1 });
 });
 </script>
 <template>
@@ -164,26 +181,16 @@ onMounted(async () => {
     </header>
 
     <div class="filter-panel d-flex flex-wrap align-center ga-3 pa-4">
-      <form class="search-form d-flex align-center ga-2" @submit.prevent="handleSearch">
-        <BaseTextField
-          v-model="search"
-          :label="UI_STRINGS.ATTRIBUTE_SET.SEARCH_LABEL"
-          :placeholder="getPlaceholder(UI_STRINGS.ATTRIBUTE_SET.SEARCH_LABEL)"
-          prepend-inner-icon="mdi-magnify"
-          hide-details
-          density="compact"
-          class="search-field flex-grow-1"
-        />
-
-        <BaseButton
-          size="small"
-          :block="false"
-          type="submit"
-          :loading="store.loading.fetchAttributeSets"
-        >
-          Search
-        </BaseButton>
-      </form>
+      <BaseTextField
+        v-model="search"
+        :label="UI_STRINGS.ATTRIBUTE_SET.SEARCH_LABEL"
+        :placeholder="getPlaceholder(UI_STRINGS.ATTRIBUTE_SET.SEARCH_LABEL)"
+        prepend-inner-icon="mdi-magnify"
+        hide-details
+        density="compact"
+        class="search-field"
+        :loading="store.loading.fetchAttributeSets"
+      />
     </div>
 
     <div class="table-panel">
@@ -195,8 +202,7 @@ onMounted(async () => {
         :items-per-page="pagination.pageSize"
         :total-items="pagination.totalItems"
         :empty-text="UI_STRINGS.ATTRIBUTE_SET.EMPTY_TITLE"
-        @update:page="handlePageChange"
-        @update:items-per-page="handleItemsPerPageChange"
+        @update:options="handleTableOptions"
       >
         <template #[itemSlots.attributes]="{ item }">
           <div class="d-flex flex-wrap ga-1">
