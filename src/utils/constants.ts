@@ -46,6 +46,12 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: "/auth-user/login",
   },
+  ATTRIBUTE_SET: {
+    LIST: "/attribute/list-of-attribute-set",
+    CREATE: "/attribute/add-attribute-set",
+    UPDATE: (id: number) => `/attribute/update-attribute-set/${id}`,
+    ATTRIBUTES: "/attribute/list-Of-attributes",
+  },
 } as const;
 
 export const AUTH_MESSAGES = {
@@ -65,6 +71,7 @@ export const ROUTE_NAMES = {
   DASHBOARD: "dashboard",
   PRODUCTS: "products",
   CATEGORIES: "categories",
+  ATTRIBUTE_SETS: "attribute-sets",
 } as const;
 
 export const ROUTE_PATHS = {
@@ -73,6 +80,7 @@ export const ROUTE_PATHS = {
   DASHBOARD: "/dashboard",
   PRODUCTS: "/products",
   CATEGORIES: "/categories",
+  ATTRIBUTE_SETS: "/attribute-sets",
 } as const;
 
 export const AUTH_ERROR_CODES = {
@@ -114,5 +122,34 @@ export const UI_STRINGS = {
     STATS_CARD_TITLE: "One step at a time.",
     STATS_FOOTER: "FOCUS ON WHAT MATTERS",
     STATS_PROGRESS: "01 / 03",
+  },
+
+  ATTRIBUTE_SET: {
+    TITLE: "Attribute Sets",
+    DESCRIPTION: "Organize attributes into groups for your products.",
+    ADD: "Add Attribute Set",
+    EDIT: "Edit Attribute Set",
+    SEARCH_LABEL: "Search attribute sets",
+    NAME_LABEL: "Name",
+    ATTRIBUTES_LABEL: "Attributes",
+    STATUS_LABEL: "Status",
+    CREATED_LABEL: "Created",
+    ACTIONS_LABEL: "Actions",
+    ACTIVE: "Active",
+    INACTIVE: "Inactive",
+    EMPTY_TITLE: "No attribute sets found",
+    EMPTY_DESCRIPTION: "Create an attribute set to start organizing product attributes.",
+    LOADING: "Loading attribute sets...",
+    SAVE: "Save Attribute Set",
+    CANCEL: "Cancel",
+    SELECT_ATTRIBUTES: "Select attributes",
+    NAME_REQUIRED: "Attribute set name is required.",
+    ATTRIBUTES_REQUIRED: "Select at least one attribute.",
+    CREATE_SUCCESS: "Attribute set created successfully.",
+    UPDATE_SUCCESS: "Attribute set updated successfully.",
+    FETCH_ERROR: "Unable to load attribute sets.",
+    DELETE: "Delete",
+    EDIT_ACTION: "Edit",
+    CLOSE: "Close",
   },
 } as const;
