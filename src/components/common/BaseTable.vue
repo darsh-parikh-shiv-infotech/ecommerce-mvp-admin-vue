@@ -84,10 +84,6 @@ const emit = defineEmits<{
   min-width: 680px;
 }
 
-.base-data-table :deep(.v-table__wrapper) {
-  overflow-x: hidden;
-}
-
 .base-data-table :deep(th) {
   background: #faf9fc;
   color: #898592;

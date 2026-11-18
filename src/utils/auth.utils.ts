@@ -4,6 +4,7 @@ import { AUTH_ERROR_CODES, AUTH_MESSAGES } from "./constants";
 
 import type { AuthUser } from "../store/auth.store";
 import { createApiError } from "../api/api-error";
+import { authService } from "../api/services";
 
 export interface AuthTokenPayload {
   sub?: string;
@@ -28,16 +29,15 @@ export function decodeAuthToken(token: string): AuthTokenPayload {
 }
 
 export function isTokenExpired(payload: AuthTokenPayload): boolean {
-  if (!payload.exp) {
+  if (typeof payload.exp !== "number" || !Number.isFinite(payload.exp)) {
     return true;
   }
 
   return payload.exp <= Math.floor(Date.now() / 1000);
 }
 
-export function getAuthUser(token: string): AuthUser {
+export async function getAuthUser(token: string): Promise<AuthUser> {
   const payload = decodeAuthToken(token);
-
   if (isTokenExpired(payload)) {
     throw createApiError({
       message: AUTH_MESSAGES.SESSION_EXPIRED,
@@ -45,25 +45,30 @@ export function getAuthUser(token: string): AuthUser {
     });
   }
 
-  const rawId = payload.id ?? payload.sub;
+  const response = await authService.viewFullProfile(token);
   const id =
-    typeof rawId === "string" && rawId.trim()
-      ? rawId
-      : typeof rawId === "number"
-        ? String(rawId)
-        : null;
+    typeof response.id === "string"
+      ? response.id.trim()
+      : Number.isSafeInteger(response.id)
+        ? String(response.id)
+        : "";
 
-  if (!id || typeof payload.email !== "string" || typeof payload.role !== "string") {
+  if (
+    !id ||
+    typeof response.email !== "string" ||
+    !response.email.trim() ||
+    typeof response.role?.name !== "string" ||
+    !response.role.name.trim()
+  ) {
     throw createApiError({
       message: AUTH_MESSAGES.INVALID_TOKEN,
       statusCode: AUTH_ERROR_CODES.INVALID_TOKEN,
     });
   }
-
   return {
     id,
-    email: payload.email,
-    name: typeof payload.name === "string" ? payload.name : undefined,
-    role: payload.role,
+    email: response.email,
+    name: typeof response.full_name === "string" ? response.full_name : undefined,
+    role: response.role.name,
   };
 }

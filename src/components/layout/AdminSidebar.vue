@@ -25,6 +25,11 @@ const navigationItems = [
     icon: "mdi-layers-outline",
     routeName: ROUTE_NAMES.ATTRIBUTE_SETS,
   },
+  {
+    label: UI_STRINGS.PRODUCTS.TITLE,
+    icon: "mdi-briefcase",
+    routeName: ROUTE_NAMES.PRODUCTS,
+  },
 ];
 
 const userName = computed(() => {
