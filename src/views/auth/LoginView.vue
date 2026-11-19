@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import AnimatedAvatar from "../../components/common/AnimatedAvatar.vue";
 import { useRouter } from "vue-router";
 import { VIcon } from "vuetify/components";
 import { useAuthStore, type LoginCredentials } from "../../store/auth.store";
@@ -12,6 +11,7 @@ import { VForm, VSnackbar } from "vuetify/components";
 import BaseButton from "../../components/common/BaseButton.vue";
 import BaseTextField from "../../components/common/BaseTextField.vue";
 import { getPlaceholder } from "../../utils/placeholder.utils";
+import AnimatedAvatar from "../../components/common/AnimatedAvatar.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();

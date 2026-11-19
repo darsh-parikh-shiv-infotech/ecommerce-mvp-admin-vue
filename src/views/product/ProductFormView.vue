@@ -126,7 +126,15 @@ function mapProductToForm(product: Product): ProductFormValues {
     meta_key: product.meta_key ?? "",
     meta_description: product.meta_description ?? "",
     attribute_set: selectedAttributeSet,
-    variants: product.variants ?? [],
+
+    variants: (product.variants ?? []).map((variant) => ({
+      ...variant,
+      price: Number(variant.price),
+      fake_price: Number(variant.fake_price),
+      available_quantity: Number(variant.available_quantity),
+      on_hand_quantity: Number(variant.on_hand_quantity),
+    })),
+
     variantAttributes: product.variantAttributes ?? [],
   };
 }
@@ -298,6 +306,10 @@ const submitProduct = handleSubmit(async (formValues) => {
 
     variants: formValues.variants.map((variant) => ({
       ...variant,
+      price: Number(variant.price),
+      fake_price: Number(variant.fake_price),
+      available_quantity: Number(variant.available_quantity),
+      on_hand_quantity: Number(variant.on_hand_quantity),
       product_variant_image: variant.product_variant_image,
     })),
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, toRef } from "vue";
-import remyModelUrl from "../../assets/avatar/character-head-nod.glb?url";
+import remyModelUrl from "../../assets/avatar/character-greeting.glb?url";
 import { useAnimatedAvatar } from "../../utils/avatar/useAnimatedAvatar";
 import type { AvatarVariant } from "../../utils/avatar/three-avatar";
 
@@ -28,7 +28,7 @@ const hasError = useAnimatedAvatar(container, {
     ref="container"
     class="animated-avatar"
     :class="`animated-avatar--${variant}`"
-    aria-label="Animated character"
+    aria-label="Animated character. Click to make it wave."
     role="img"
   >
     <div v-if="hasError" class="animated-avatar__fallback">Avatar unavailable</div>
@@ -42,8 +42,10 @@ const hasError = useAnimatedAvatar(container, {
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  cursor: pointer;
   pointer-events: auto;
-  background: #252535;
+  /* Override from the parent with --avatar-bg, e.g. `transparent`. */
+  background: var(--avatar-bg, #252535);
 }
 
 .animated-avatar canvas {

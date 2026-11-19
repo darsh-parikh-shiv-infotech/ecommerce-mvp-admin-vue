@@ -89,8 +89,13 @@ export interface Product {
   variantAttributes: Attribute[];
 }
 
-export type VariantPayload = Omit<Variant, "id" | "product_id" | "createdAt"> & {
+export type VariantPayload = Omit<
+  Variant,
+  "id" | "product_id" | "createdAt" | "price" | "fake_price"
+> & {
   id?: number;
+  price: number;
+  fake_price: number;
 };
 
 export interface ProductPayload {
