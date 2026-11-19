@@ -3,5 +3,5 @@ import AvatarGreetingCard from "../../components/common/AvatarGreetingCard.vue";
 </script>
 
 <template>
-  <AvatarGreetingCard title="Hello Admin" />
+  <AvatarGreetingCard title="Hello Admin" style="margin-top: 3%" />
 </template>

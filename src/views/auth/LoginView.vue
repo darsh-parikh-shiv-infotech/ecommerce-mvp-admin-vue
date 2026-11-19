@@ -236,8 +236,8 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
 }
 
 .float-card--welcome {
-  top: 17%;
-  left: 7%;
+  top: 10%;
+  left: 3%;
   padding: 14px 16px;
 }
 
@@ -269,8 +269,8 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
 }
 
 .float-card--stats {
-  right: 7%;
-  bottom: 14%;
+  right: 3%;
+  bottom: 7%;
   width: min(215px, 60%);
   align-items: stretch;
   gap: 11px;

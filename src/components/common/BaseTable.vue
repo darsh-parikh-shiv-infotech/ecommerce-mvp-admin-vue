@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { VDataTableServer } from "vuetify/components";
-import { PAGINATION_CONFIG } from "../../utils/constants";
+import { PAGINATION_CONFIG, UI_STRINGS } from "../../utils/constants";
 
 export interface BaseTableHeader {
   title: string;
@@ -29,7 +29,7 @@ withDefaults(
     page: 1,
     itemsPerPage: 10,
     itemValue: "id",
-    emptyText: "No records found.",
+    emptyText: UI_STRINGS.TABLE.EMPTY,
     hideFooter: false,
     itemsPerPageOptions: () => [...PAGINATION_CONFIG.ITEMS_PER_PAGE_OPTIONS],
   },
@@ -59,7 +59,7 @@ const emit = defineEmits<{
       :items-length="totalItems"
       :item-value="itemValue"
       :hide-default-footer="hideFooter"
-      :loading-text="'Loading records...'"
+      :loading-text="UI_STRINGS.TABLE.LOADING"
       :no-data-text="emptyText"
       class="base-data-table"
       :items-per-page-options="itemsPerPageOptions"
@@ -76,29 +76,28 @@ const emit = defineEmits<{
 .base-table {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   border-radius: 14px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .base-data-table {
-  min-width: 680px;
+  min-width: 1280px;
 }
 
-.base-data-table :deep(th) {
-  background: #faf9fc;
-  color: #898592;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
+/* Disable Vuetify's internal scrolling */
+.base-data-table :deep(.v-table__wrapper) {
+  overflow: visible;
 }
 
-.base-data-table :deep(td) {
-  color: #514e5b;
-  font-size: 12px;
+.base-data-table :deep(.v-table > .v-table__wrapper > table) {
+  width: 100%;
+  border-spacing: 0;
 }
 
+/* Footer */
 .base-data-table :deep(.v-data-table-footer) {
   border-top: 1px solid #eeedf2;
   padding: 8px 16px;

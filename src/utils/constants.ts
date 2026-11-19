@@ -119,6 +119,11 @@ export const UI_STRINGS = {
   APP_NAME: "ecommerce",
   APP_DESCRIPTION: "STORE MANAGEMENT",
 
+  TABLE: {
+    LOADING: "Loading records...",
+    EMPTY: "No records found.",
+  },
+
   ADMIN: {
     WORKSPACE: "Workspace",
     OVERVIEW: "Overview",

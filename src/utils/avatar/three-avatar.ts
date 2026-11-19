@@ -31,10 +31,16 @@ export interface AvatarPointer {
   targetY: number;
 }
 
+/** A bone plus the extra rotation (breathing, cursor-follow) we last layered on top of the clip. */
+export interface RigBone {
+  bone: Bone | null;
+  offset: Quaternion;
+}
+
 export interface AvatarRig {
-  head: Bone | null;
-  neck: Bone | null;
-  spine: Bone | null;
+  head: RigBone;
+  neck: RigBone;
+  spine: RigBone;
 }
 
 /** Size of the avatar (idle pose + every frame of the greeting), in world units. */
@@ -194,10 +200,12 @@ export function createAvatarRig(model: Group): AvatarRig {
   let head = findBone(bones, /^(head|head1|mixamorighead|bip001 head)$/i);
   if (!head) head = findBone(bones, /head/i);
 
+  const createRigBone = (bone: Bone | null): RigBone => ({ bone, offset: new Quaternion() });
+
   return {
-    head,
-    neck: findBone(bones, /neck/i),
-    spine: findBone(bones, /spine|chest/i),
+    head: createRigBone(head),
+    neck: createRigBone(findBone(bones, /neck/i)),
+    spine: createRigBone(findBone(bones, /spine|chest/i)),
   };
 }
 
@@ -236,8 +244,8 @@ export function prepareAvatar(model: Group, clips: AnimationClip[]): PreparedAva
   model.updateMatrixWorld(true);
 
   const anchor = new Vector3();
-  if (rig.head) {
-    rig.head.getWorldPosition(anchor);
+  if (rig.head.bone) {
+    rig.head.bone.getWorldPosition(anchor);
   } else {
     bounds.getCenter(anchor);
   }
@@ -263,14 +271,34 @@ export function prepareAvatar(model: Group, clips: AnimationClip[]): PreparedAva
 /* Per-frame pose + camera                                                    */
 /* -------------------------------------------------------------------------- */
 
-function addBoneOffset(bone: Bone | null, pitch: number, yaw: number): void {
-  if (!bone) return;
+const scratchEuler = new Euler();
+const scratchQuaternion = new Quaternion();
 
-  // The mixer rewrites the bone every frame, so the offset is layered on top of it.
-  bone.quaternion.multiply(new Quaternion().setFromEuler(new Euler(pitch, yaw, 0, "YXZ")));
+function addBoneOffset(target: RigBone, pitch: number, yaw: number): void {
+  if (!target.bone) return;
+
+  target.offset.setFromEuler(scratchEuler.set(pitch, yaw, 0, "YXZ"));
+  target.bone.quaternion.multiply(target.offset);
 }
 
-/** Call after `animator.update()`: adds breathing and cursor-follow on top of the clip. */
+/**
+ * Call BEFORE `animator.update()` every frame.
+ *
+ * Three.js only rewrites a bone when the clip's value for it changed since the previous
+ * frame. While the avatar stands still the value never changes, so an offset multiplied on
+ * top would pile up frame after frame (the character slowly bows and rises). Taking last
+ * frame's offset back out first keeps the bone at exactly the clip's pose.
+ */
+export function clearPoseOffsets(rig: AvatarRig): void {
+  for (const target of [rig.head, rig.neck, rig.spine]) {
+    if (!target.bone) continue;
+
+    target.bone.quaternion.multiply(scratchQuaternion.copy(target.offset).invert()).normalize();
+    target.offset.identity();
+  }
+}
+
+/** Call AFTER `animator.update()`: adds breathing and cursor-follow on top of the clip. */
 export function updateAvatarPose(
   rig: AvatarRig,
   pointer: AvatarPointer,

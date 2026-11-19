@@ -11,6 +11,7 @@ import {
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
+  clearPoseOffsets,
   disposeAvatarModel,
   frameAvatarCamera,
   prepareAvatar,
@@ -43,8 +44,10 @@ function randomDelay([min, max]: DelayRange): number {
 export function useAnimatedAvatar(
   container: Ref<HTMLDivElement | null>,
   options: UseAnimatedAvatarOptions,
-): Readonly<Ref<boolean>> {
+): { hasError: Readonly<Ref<boolean>>; isLoading: Readonly<Ref<boolean>> } {
   const hasError = ref(false);
+  /** True until the model is loaded AND its first frame has been drawn. */
+  const isLoading = ref(true);
 
   let renderer: WebGLRenderer | null = null;
   let camera: PerspectiveCamera | null = null;
@@ -121,11 +124,13 @@ export function useAnimatedAvatar(
     clock.previousFrame = timestamp;
 
     if (animator && rig) {
+      clearPoseOffsets(rig);
       animator.update(delta);
       updateAvatarPose(rig, pointer, options.variant.value, elapsed, delta);
     }
 
     renderer.render(scene, camera);
+    isLoading.value = false;
 
     if (!isReducedMotion) {
       animationFrame = requestAnimationFrame(renderFrame);
@@ -140,6 +145,7 @@ export function useAnimatedAvatar(
     if (isReducedMotion) {
       // Single still frame (the animator already holds the standing pose).
       renderer.render(scene, camera);
+      isLoading.value = false;
       return;
     }
 
@@ -272,6 +278,14 @@ export function useAnimatedAvatar(
       renderer.toneMapping = ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.15;
       renderer.setClearColor(0x000000, 0);
+      // Size the canvas by CSS. `setSize(w, h, false)` leaves its style alone, and scoped
+      // component styles never reach an element created in JS, so without this the canvas
+      // is drawn at width * devicePixelRatio CSS pixels and gets cropped by the container.
+      Object.assign(renderer.domElement.style, {
+        display: "block",
+        width: "100%",
+        height: "100%",
+      });
       container.value.appendChild(renderer.domElement);
 
       scene.add(new AmbientLight(0xffffff, 2.0));
@@ -328,6 +342,7 @@ export function useAnimatedAvatar(
     } catch (error) {
       console.error("[AnimatedAvatar] Failed to load model:", error);
       hasError.value = true;
+      isLoading.value = false;
       cleanup();
     }
   }
@@ -348,5 +363,5 @@ export function useAnimatedAvatar(
 
   onBeforeUnmount(cleanup);
 
-  return hasError;
+  return { hasError, isLoading };
 }
