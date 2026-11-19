@@ -39,8 +39,8 @@ function createVariant(): VariantPayload {
   return {
     title: "",
     code: "",
-    price: "",
-    fake_price: "",
+    price: 0,
+    fake_price: 0,
     available_quantity: 0,
     on_hand_quantity: 0,
     product_variant_image: [],
