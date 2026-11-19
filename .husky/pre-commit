@@ -14,7 +14,7 @@ die()  {
   exit 1
 }
 
-printf '\n%s\n' "${BOLD}Relecca pre-commit${RESET} ${DIM}lint - types - build${RESET}"
+printf '\n%s\n' "${BOLD} pre-commit${RESET} ${DIM}lint - types - build${RESET}"
 
 # ---- 1. staged files only (fast) ----------------------------------------
 step "Linting and formatting staged files"

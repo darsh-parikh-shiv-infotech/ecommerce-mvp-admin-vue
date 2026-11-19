@@ -14,11 +14,23 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "vue": "^3.5.44"
+    "@mdi/font": "^7.4.47",
+    "@vee-validate/yup": "^4.15.1",
+    "axios": "^1.21.1",
+    "http-status-codes": "^2.3.0",
+    "jwt-decode": "^4.0.0",
+    "pinia": "^4.1.0",
+    "three": "^0.187.0",
+    "vee-validate": "^4.15.1",
+    "vue": "^3.5.44",
+    "vue-router": "^5.5.0",
+    "vuetify": "^4.3.3",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.19.2",
+    "@types/three": "^0.187.0",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^10.14.0",
