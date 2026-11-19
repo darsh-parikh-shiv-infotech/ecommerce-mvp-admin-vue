@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { VDataTableServer } from "vuetify/components";
-import { PAGINATION_CONFIG } from "../../utils/constants";
+import { PAGINATION_CONFIG, UI_STRINGS } from "../../utils/constants";
 
 export interface BaseTableHeader {
   title: string;
@@ -29,7 +29,7 @@ withDefaults(
     page: 1,
     itemsPerPage: 10,
     itemValue: "id",
-    emptyText: "No records found.",
+    emptyText: UI_STRINGS.TABLE.EMPTY,
     hideFooter: false,
     itemsPerPageOptions: () => [...PAGINATION_CONFIG.ITEMS_PER_PAGE_OPTIONS],
   },
@@ -59,7 +59,7 @@ const emit = defineEmits<{
       :items-length="totalItems"
       :item-value="itemValue"
       :hide-default-footer="hideFooter"
-      :loading-text="'Loading records...'"
+      :loading-text="UI_STRINGS.TABLE.LOADING"
       :no-data-text="emptyText"
       class="base-data-table"
       :items-per-page-options="itemsPerPageOptions"
