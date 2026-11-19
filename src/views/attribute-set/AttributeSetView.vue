@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import BaseButton from "../../components/common/BaseButton.vue";
 import BaseTable, { type BaseTableHeader } from "../../components/common/BaseTable.vue";
 import BaseTextField from "../../components/common/BaseTextField.vue";
 import AttributeSetFormDialog from "../../components/attribute-set/AttributeSetFormDialog.vue";
 import { useAttributeSetStore, type AttributeSetPayload } from "../../store/attribute-set.store.ts";
-import { PAGINATION_CONFIG, UI_STRINGS } from "../../utils/constants.ts";
+import { UI_STRINGS } from "../../utils/constants.ts";
 import { getPlaceholder } from "../../utils/placeholder.utils.ts";
 import { VChip, VIcon, VSnackbar } from "vuetify/components";
-import { useDebounce } from "../../utils/composables/useDebounce.ts";
+import { useServerTable } from "../../utils/composables/useServerTable.ts";
 import type { AttributeSet } from "../../store/common.types.ts";
+import { formatDate } from "../../utils/common.utils.ts";
 
 const store = useAttributeSetStore();
 const itemSlots = {
@@ -25,22 +26,6 @@ const headers: BaseTableHeader[] = [
   { title: "Created", key: "createdAt", minWidth: 130 },
   { title: "Actions", key: "actions", align: "end", sortable: false },
 ];
-interface AttributeSetQuery {
-  page?: number;
-  limit?: number;
-  sortKey?: string;
-  sortValue?: "asc" | "desc";
-}
-interface TableOptions {
-  page: number;
-  itemsPerPage: number;
-  sortBy: {
-    key: string;
-    order: "asc" | "desc";
-  }[];
-}
-
-const search = ref("");
 const dialogOpen = ref(false);
 const editingAttributeSet = ref<AttributeSet | null>(null);
 const showSnackbar = ref(false);
@@ -49,60 +34,23 @@ const snackbarColor = ref<"success" | "error">("success");
 
 const attributeSets = computed(() => store.attributeSets);
 const pagination = computed(() => store.pagination);
-const tableQuery = ref<AttributeSetQuery>({
-  page: PAGINATION_CONFIG.DEFAULT_PAGE,
-  limit: PAGINATION_CONFIG.DEFAULT_LIMIT,
-  sortKey: PAGINATION_CONFIG.DEFAULT_SORT_KEY,
-  sortValue: PAGINATION_CONFIG.DEFAULT_SORT_VALUE,
-});
-
 const isSaving = computed(
   () => store.loading.createAttributeSet || store.loading.updateAttributeSet,
 );
 
-const debouncedSearch = useDebounce(search, 400);
-
-const dateFormatter = new Intl.DateTimeFormat("en-IN", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
-function formatDate(date: string): string {
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) return "—";
-
-  return dateFormatter.format(parsedDate);
-}
+const {
+  search,
+  load: loadAttributeSets,
+  handleOptions: handleTableOptions,
+} = useServerTable(
+  (params) => store.fetchAttributeSets(params),
+  () => notify(store.error || UI_STRINGS.ATTRIBUTE_SET.FETCH_ERROR, "error"),
+);
 
 function notify(message: string, color: "success" | "error" = "success") {
   snackbarMessage.value = message;
   snackbarColor.value = color;
   showSnackbar.value = true;
-}
-
-async function loadAttributeSets(query: Partial<AttributeSetQuery> = {}) {
-  Object.assign(tableQuery.value, query);
-  try {
-    await store.fetchAttributeSets({
-      ...tableQuery.value,
-      search: search.value.trim() || undefined,
-    });
-  } catch {
-    notify(store.error || UI_STRINGS.ATTRIBUTE_SET.FETCH_ERROR, "error");
-  }
-}
-
-function handleTableOptions(options: TableOptions) {
-  const sorting = options.sortBy[0];
-
-  loadAttributeSets({
-    page: options.page,
-    limit: options.itemsPerPage,
-    sortKey: sorting?.key ?? "id",
-    sortValue: sorting?.order ?? "desc",
-  });
 }
 
 async function ensureAttributesLoaded() {
@@ -152,14 +100,6 @@ async function handleSave(payload: AttributeSetPayload) {
     notify(store.error || "Unable to save attribute set.", "error");
   }
 }
-
-watch(debouncedSearch, () => {
-  loadAttributeSets({ page: 1 });
-});
-
-onMounted(() => {
-  loadAttributeSets({ page: 1 });
-});
 </script>
 <template>
   <section class="attribute-set-page d-flex flex-column ga-6">
