@@ -20,6 +20,11 @@ const navigationItems = [
     icon: "mdi-view-dashboard-outline",
     routeName: ROUTE_NAMES.DASHBOARD,
   },
+  {
+    label: UI_STRINGS.ATTRIBUTE_SET.TITLE,
+    icon: "mdi-layers-outline",
+    routeName: ROUTE_NAMES.ATTRIBUTE_SETS,
+  },
 ];
 
 const userName = computed(() => {

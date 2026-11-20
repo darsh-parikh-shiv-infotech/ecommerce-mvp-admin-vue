@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../store/auth.store.ts";
-import { ROUTE_NAMES, ROUTE_PATHS } from "../utils/constants";
+import { ROUTE_NAMES, ROUTE_PATHS, UI_STRINGS } from "../utils/constants";
 import AdminLayout from "../layouts/AdminLayout.vue";
 
 const routes = [
@@ -28,7 +28,15 @@ const routes = [
         name: ROUTE_NAMES.DASHBOARD,
         component: () => import("../views/dashboard/DashboardView.vue"),
         meta: {
-          title: "Overview",
+          title: UI_STRINGS.ADMIN.OVERVIEW,
+        },
+      },
+      {
+        path: "attribute-sets",
+        name: ROUTE_NAMES.ATTRIBUTE_SETS,
+        component: () => import("../views/attribute-set/AttributeSetView.vue"),
+        meta: {
+          title: UI_STRINGS.ATTRIBUTE_SET.TITLE,
         },
       },
       /*
@@ -38,14 +46,6 @@ const routes = [
         component: () => import("../views/common/ComingSoonView.vue"),
         meta: {
           title: "Products",
-        },
-      },
-      {
-        path: "categories",
-        name: ROUTE_NAMES.CATEGORIES,
-        component: () => import("../views/common/ComingSoonView.vue"),
-        meta: {
-          title: "Categories",
         },
       },
       */
