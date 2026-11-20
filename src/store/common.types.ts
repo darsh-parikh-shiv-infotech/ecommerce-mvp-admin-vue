@@ -111,3 +111,15 @@ export interface ProductPayload {
   variants: VariantPayload[];
   variantAttributes?: Attribute[];
 }
+
+export interface VariantFormValues {
+  id?: number;
+  title: string;
+  code: string;
+  price: string;
+  fake_price: string;
+  available_quantity: number | undefined;
+  on_hand_quantity: number | undefined;
+  product_variant_image: string[];
+  status: "active" | "inactive";
+}

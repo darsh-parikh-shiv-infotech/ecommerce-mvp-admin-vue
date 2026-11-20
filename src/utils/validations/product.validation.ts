@@ -48,15 +48,19 @@ const variantSchema = yup.object({
   price: yup
     .string()
     .required(UI_STRINGS.PRODUCTS.VALIDATION.PRICE_REQUIRED)
-    .test("valid-price", UI_STRINGS.PRODUCTS.VALIDATION.PRICE_INVALID, (value) =>
-      value ? /^\d+(\.\d{1,2})?$/.test(value) : false,
+    .test(
+      "valid-price",
+      UI_STRINGS.PRODUCTS.VALIDATION.PRICE_INVALID,
+      (value) => value !== undefined && /^\d+(\.\d{1,2})?$/.test(value),
     ),
 
   fake_price: yup
     .string()
     .required(UI_STRINGS.PRODUCTS.VALIDATION.FAKE_PRICE_REQUIRED)
-    .test("valid-fake-price", UI_STRINGS.PRODUCTS.VALIDATION.FAKE_PRICE_INVALID, (value) =>
-      value ? /^\d+(\.\d{1,2})?$/.test(value) : false,
+    .test(
+      "valid-fake-price",
+      UI_STRINGS.PRODUCTS.VALIDATION.FAKE_PRICE_INVALID,
+      (value) => value !== undefined && /^\d+(\.\d{1,2})?$/.test(value),
     ),
 
   available_quantity: yup

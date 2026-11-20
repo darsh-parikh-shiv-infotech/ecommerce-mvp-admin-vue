@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { UI_STRINGS } from "../../utils/constants.ts";
 import AnimatedAvatar from "./AnimatedAvatar.vue";
 
-withDefaults(defineProps<{ title?: string }>(), { title: "Hello Admin" });
+withDefaults(defineProps<{ title?: string }>(), { title: UI_STRINGS.DASHBOARD.GREETING });
 </script>
 
 <template>

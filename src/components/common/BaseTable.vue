@@ -23,6 +23,7 @@ withDefaults(
     emptyText?: string;
     hideFooter?: boolean;
     itemsPerPageOptions?: number[];
+    minWidth?: string | number;
   }>(),
   {
     loading: false,
@@ -32,6 +33,7 @@ withDefaults(
     emptyText: UI_STRINGS.TABLE.EMPTY,
     hideFooter: false,
     itemsPerPageOptions: () => [...PAGINATION_CONFIG.ITEMS_PER_PAGE_OPTIONS],
+    minWidth: 680,
   },
 );
 
@@ -62,6 +64,9 @@ const emit = defineEmits<{
       :loading-text="UI_STRINGS.TABLE.LOADING"
       :no-data-text="emptyText"
       class="base-data-table"
+      :style="{
+        minWidth: typeof minWidth === 'number' ? `${minWidth}px` : minWidth,
+      }"
       :items-per-page-options="itemsPerPageOptions"
       @update:options="emit('update:options', $event)"
     >
@@ -84,10 +89,9 @@ const emit = defineEmits<{
 }
 
 .base-data-table {
-  min-width: 1280px;
+  width: 100%;
 }
 
-/* Disable Vuetify's internal scrolling */
 .base-data-table :deep(.v-table__wrapper) {
   overflow: visible;
 }

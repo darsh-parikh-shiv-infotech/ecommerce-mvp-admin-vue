@@ -29,6 +29,7 @@ interface ProductState {
 }
 
 let productFetchSequence = 0;
+let productListFetchSequence = 0;
 
 export const useProductStore = defineStore("product", {
   state: (): ProductState => ({
@@ -52,6 +53,8 @@ export const useProductStore = defineStore("product", {
 
   actions: {
     async fetchProducts(params: PaginationRequest = {}): Promise<void> {
+      const requestSequence = ++productListFetchSequence;
+
       this.loading.fetchProducts = true;
       this.error = null;
 
@@ -62,6 +65,8 @@ export const useProductStore = defineStore("product", {
 
       try {
         const response = await productService.fetchProducts(requestParams);
+
+        if (requestSequence !== productListFetchSequence) return;
 
         this.products = response.rows;
         this.pagination = {
@@ -74,11 +79,16 @@ export const useProductStore = defineStore("product", {
 
         this.listParams = requestParams;
       } catch (error: unknown) {
+        if (requestSequence !== productListFetchSequence) return;
+
         const apiError = isApiError(error) ? error : normalizeApiError(error);
+
         this.error = apiError.message;
         throw apiError;
       } finally {
-        this.loading.fetchProducts = false;
+        if (requestSequence === productListFetchSequence) {
+          this.loading.fetchProducts = false;
+        }
       }
     },
 

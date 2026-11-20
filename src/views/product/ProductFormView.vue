@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, watch, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useForm } from "vee-validate";
 import {
+  VAlert,
   VCard,
   VCardText,
   VChip,
@@ -23,7 +24,7 @@ import type {
   AttributeSet,
   Product,
   ProductPayload,
-  VariantPayload,
+  VariantFormValues,
 } from "../../store/common.types";
 
 import {
@@ -32,7 +33,7 @@ import {
 } from "../../utils/validations/product.validation";
 import ProductInformationStep from "../../components/product/ProductInformationStep.vue";
 import ProductVariantsStep from "../../components/product/ProductVariantsStep.vue";
-import { UI_STRINGS } from "../../utils/constants";
+import { ROUTE_NAMES, UI_STRINGS } from "../../utils/constants";
 import BaseButton from "../../components/common/BaseButton.vue";
 
 interface ProductFormValues {
@@ -44,7 +45,7 @@ interface ProductFormValues {
   meta_key: string;
   meta_description: string;
   attribute_set: AttributeSet | null;
-  variants: VariantPayload[];
+  variants: VariantFormValues[];
   variantAttributes: Attribute[];
 }
 
@@ -56,11 +57,14 @@ const productStore = useProductStore();
 const attributeSetStore = useAttributeSetStore();
 
 const productId = computed(() => {
+  if (typeof route.params.id !== "string") return null;
+
   const id = Number(route.params.id);
-  return Number.isInteger(id) && id > 0 ? id : null;
+
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
 });
 
-const isEditMode = computed(() => productId.value !== null);
+const isEditMode = computed(() => route.name === ROUTE_NAMES.PRODUCT_EDIT);
 
 const pageTitle = computed(() =>
   isEditMode.value ? UI_STRINGS.PRODUCTS.EDIT_FORM_TITLE : UI_STRINGS.PRODUCTS.ADD_FORM_TITLE,
@@ -97,6 +101,7 @@ const snackbar = ref({
 });
 
 const isPageLoading = ref(false);
+const loadError = ref<string | null>(null);
 
 const attributeSets = computed(() =>
   attributeSetStore.attributeSets.filter((attributeSet) => attributeSet.status === "active"),
@@ -114,8 +119,16 @@ function notify(message: string, color: "success" | "error" = "error") {
 }
 
 function mapProductToForm(product: Product): ProductFormValues {
-  const selectedAttributeSet =
-    attributeSetStore.attributeSets.find((item) => item.id === product.attribute_set?.id) ?? null;
+  const selectedAttributeSet = attributeSets.value.find(
+    (item) => item.id === product.attribute_set?.id,
+  ) ?? {
+    id: product.attribute_set.id,
+    name: product.attribute_set.name,
+    status: "inactive" as const,
+    createdAt: "",
+    updatedAt: "",
+    attributes: product.variantAttributes ?? [],
+  };
 
   return {
     title: product.title ?? "",
@@ -129,21 +142,26 @@ function mapProductToForm(product: Product): ProductFormValues {
 
     variants: (product.variants ?? []).map((variant) => ({
       ...variant,
-      price: Number(variant.price),
-      fake_price: Number(variant.fake_price),
+      price: String(variant.price ?? ""),
+      fake_price: String(variant.fake_price ?? ""),
       available_quantity: Number(variant.available_quantity),
       on_hand_quantity: Number(variant.on_hand_quantity),
+      product_variant_image: variant.product_variant_image ?? [],
     })),
 
     variantAttributes: product.variantAttributes ?? [],
   };
 }
 
-async function loadFormData() {
+async function loadFormData(): Promise<void> {
   isPageLoading.value = true;
+  loadError.value = null;
 
   try {
     await attributeSetStore.fetchAttributeSets();
+    if (isEditMode.value && productId.value === null) {
+      throw new Error(UI_STRINGS.PRODUCTS.INVALID_PRODUCT_ID);
+    }
 
     if (isEditMode.value && productId.value !== null) {
       await productStore.fetchSingleProduct(productId.value);
@@ -155,13 +173,16 @@ async function loadFormData() {
       resetForm({
         values: mapProductToForm(productStore.product),
       });
-    } else {
-      resetForm({
-        values: { ...initialValues },
-      });
+
+      return;
     }
+
+    resetForm({
+      values: { ...initialValues },
+    });
   } catch (error: unknown) {
-    notify(error instanceof Error ? error.message : UI_STRINGS.PRODUCTS.FORM.PRODUCT_LOAD_ERROR);
+    loadError.value =
+      error instanceof Error ? error.message : UI_STRINGS.PRODUCTS.FORM.PRODUCT_LOAD_ERROR;
   } finally {
     isPageLoading.value = false;
   }
@@ -249,25 +270,12 @@ async function goToNextStep() {
     return;
   }
 
-  informationCompleted.value = true;
   currentStep.value = 2;
 }
 
-const informationCompleted = ref(false);
-
-async function navigateToStep(step: 1 | 2) {
+async function navigateToStep(step: 1 | 2): Promise<void> {
   if (step === 1) {
     currentStep.value = 1;
-    return;
-  }
-
-  if (isEditMode.value) {
-    currentStep.value = 2;
-    return;
-  }
-
-  if (!informationCompleted.value) {
-    await goToNextStep();
     return;
   }
 
@@ -278,58 +286,72 @@ function goToPreviousStep() {
   currentStep.value = 1;
 }
 
-const submitProduct = handleSubmit(async (formValues) => {
-  if (!authStore.user || !formValues.attribute_set) {
-    notify(UI_STRINGS.PRODUCTS.FORM.PRODUCT_INFO_REQUIRED);
-    currentStep.value = 1;
-    return;
-  }
-
-  const vendorId = Number(authStore.user.id);
-
-  if (!Number.isSafeInteger(vendorId) || vendorId <= 0) {
-    notify(UI_STRINGS.PRODUCTS.FORM.INVALID_VENDOR_ID);
-    return;
-  }
-
-  const payload: ProductPayload = {
-    title: formValues.title,
-    status: formValues.status,
-    description: formValues.description,
-    product_image: formValues.product_image,
-    meta_title: formValues.meta_title,
-    meta_key: formValues.meta_key,
-    meta_description: formValues.meta_description,
-
-    auth_vendor_id: Number(authStore.user?.id),
-    attribute_set_id: Number(formValues.attribute_set.id),
-
-    variants: formValues.variants.map((variant) => ({
-      ...variant,
-      price: Number(variant.price),
-      fake_price: Number(variant.fake_price),
-      available_quantity: Number(variant.available_quantity),
-      on_hand_quantity: Number(variant.on_hand_quantity),
-      product_variant_image: variant.product_variant_image,
-    })),
-
-    variantAttributes: formValues.variantAttributes,
-  };
-
-  try {
-    if (isEditMode.value && productId.value !== null) {
-      await productStore.updateProduct(productId.value, payload);
-      notify(UI_STRINGS.PRODUCTS.FORM.PRODUCT_UPDATE_SUCCESS, "success");
-    } else {
-      await productStore.createProduct(payload);
-      notify(UI_STRINGS.PRODUCTS.FORM.PRODUCT_CREATE_SUCCESS, "success");
+const submitProduct = handleSubmit(
+  async (formValues) => {
+    if (!authStore.user || !formValues.attribute_set) {
+      notify(UI_STRINGS.PRODUCTS.FORM.PRODUCT_INFO_REQUIRED);
+      currentStep.value = 1;
+      return;
     }
 
-    await router.push("/products");
-  } catch {
-    notify(productStore.error || UI_STRINGS.PRODUCTS.FORM.PRODUCT_SAVE_ERROR, "error");
-  }
-});
+    const vendorId = Number(authStore.user.id);
+
+    if (!Number.isSafeInteger(vendorId) || vendorId <= 0) {
+      notify(UI_STRINGS.PRODUCTS.FORM.INVALID_VENDOR_ID);
+      return;
+    }
+
+    const payload: ProductPayload = {
+      title: formValues.title,
+      status: formValues.status,
+      description: formValues.description,
+      product_image: formValues.product_image,
+      meta_title: formValues.meta_title,
+      meta_key: formValues.meta_key,
+      meta_description: formValues.meta_description,
+
+      auth_vendor_id: vendorId,
+      attribute_set_id: formValues.attribute_set.id,
+
+      variants: formValues.variants.map((variant) => ({
+        ...(variant.id !== undefined ? { id: variant.id } : {}),
+        title: variant.title,
+        code: variant.code,
+        price: Number(variant.price),
+        fake_price: Number(variant.fake_price),
+        available_quantity: Number(variant.available_quantity),
+        on_hand_quantity: Number(variant.on_hand_quantity),
+        product_variant_image: variant.product_variant_image,
+        status: variant.status,
+      })),
+
+      variantAttributes: formValues.variantAttributes,
+    };
+
+    try {
+      if (isEditMode.value && productId.value !== null) {
+        await productStore.updateProduct(productId.value, payload);
+        notify(UI_STRINGS.PRODUCTS.FORM.PRODUCT_UPDATE_SUCCESS, "success");
+      } else {
+        await productStore.createProduct(payload);
+        notify(UI_STRINGS.PRODUCTS.FORM.PRODUCT_CREATE_SUCCESS, "success");
+      }
+
+      await router.push({ name: ROUTE_NAMES.PRODUCTS });
+    } catch {
+      notify(productStore.error || UI_STRINGS.PRODUCTS.FORM.PRODUCT_SAVE_ERROR, "error");
+    }
+  },
+  ({ errors }) => {
+    const hasInformationErrors = Object.keys(errors).some(
+      (key) => !key.startsWith("variants") && key !== "variantAttributes",
+    );
+
+    if (hasInformationErrors) {
+      currentStep.value = 1;
+    }
+  },
+);
 
 watch(
   () => values.attribute_set,
@@ -352,139 +374,157 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <VContainer fluid class="pa-4 pa-md-6">
-    <VRow align="center" class="mb-5">
-      <VCol cols="12" sm="7">
-        <h1 class="text-h5 font-weight-bold">
-          {{ pageTitle }}
-        </h1>
+  <VProgressLinear v-if="isPageLoading" indeterminate color="primary" class="mb-4" />
 
-        <p class="text-body-2 text-medium-emphasis">
-          {{ UI_STRINGS.PRODUCTS.FORM.DESCRIPTION }}
-        </p>
-      </VCol>
+  <VAlert v-else-if="loadError" type="error" variant="tonal" class="mb-4">
+    <div class="d-flex flex-wrap align-center justify-space-between ga-3">
+      <span>{{ loadError }}</span>
 
-      <VCol cols="12" sm="5" class="d-flex justify-sm-end">
-        <BaseButton
-          :block="false"
-          variant="outlined"
-          color="secondary"
-          @click="router.push('/products')"
-        >
-          {{ UI_STRINGS.PRODUCTS.FORM.CANCEL }}
-        </BaseButton>
-      </VCol>
-    </VRow>
+      <BaseButton size="small" :block="false" @click="loadFormData">
+        {{ UI_STRINGS.PRODUCTS.RETRY }}
+      </BaseButton>
+    </div>
+  </VAlert>
 
-    <VProgressLinear v-if="isPageLoading" indeterminate color="primary" class="mb-4" />
+  <template v-else>
+    <VContainer fluid class="pa-4 pa-md-6">
+      <VRow align="center" class="mb-5">
+        <VCol cols="12" sm="7">
+          <h1 class="text-h5 font-weight-bold">
+            {{ pageTitle }}
+          </h1>
 
-    <template v-else>
-      <VCard rounded="lg" class="mb-5">
-        <VCardText class="pa-4">
-          <div class="d-flex align-center ga-3 flex-wrap">
-            <BaseButton
-              variant="text"
-              :block="false"
-              class="text-none"
-              height="auto"
-              :aria-current="currentStep === 1 ? 'step' : undefined"
-              @click="navigateToStep(1)"
-            >
-              <VChip :color="currentStep === 1 ? 'primary' : 'success'" variant="flat" class="mr-3">
-                1
-              </VChip>
-              <span class="text-left">
-                <span class="d-block text-body-1 font-weight-medium">
-                  {{ UI_STRINGS.PRODUCTS.FORM.STEP_INFORMATION }}
-                </span>
-                <span class="d-block text-caption text-medium-emphasis">
-                  {{ UI_STRINGS.PRODUCTS.FORM.STEP_INFORMATION_DESCRIPTION }}
-                </span>
-              </span>
-            </BaseButton>
+          <p class="text-body-2 text-medium-emphasis">
+            {{ UI_STRINGS.PRODUCTS.FORM.DESCRIPTION }}
+          </p>
+        </VCol>
 
-            <VSpacer />
+        <VCol cols="12" sm="5" class="d-flex justify-sm-end">
+          <BaseButton
+            :block="false"
+            variant="outlined"
+            color="secondary"
+            @click="router.push({ name: ROUTE_NAMES.PRODUCTS })"
+          >
+            {{ UI_STRINGS.PRODUCTS.FORM.CANCEL }}
+          </BaseButton>
+        </VCol>
+      </VRow>
 
-            <BaseButton
-              variant="text"
-              class="text-none"
-              height="auto"
-              :block="false"
-              :disabled="!isEditMode && !informationCompleted && currentStep !== 2"
-              :aria-current="currentStep === 2 ? 'step' : undefined"
-              @click="navigateToStep(2)"
-            >
-              <VChip
-                :color="currentStep === 2 ? 'primary' : 'default'"
-                variant="tonal"
-                class="mr-3"
+      <VProgressLinear v-if="isPageLoading" indeterminate color="primary" class="mb-4" />
+
+      <template v-else>
+        <VCard rounded="lg" class="mb-5">
+          <VCardText class="pa-4">
+            <div class="d-flex align-center ga-3 flex-wrap">
+              <BaseButton
+                variant="text"
+                :block="false"
+                class="text-none"
+                height="auto"
+                :aria-current="currentStep === 1 ? 'step' : undefined"
+                @click="navigateToStep(1)"
               >
-                2
-              </VChip>
-              <span class="text-left">
-                <span class="d-block text-body-1 font-weight-medium">
-                  {{ UI_STRINGS.PRODUCTS.FORM.STEP_VARIANTS }}
+                <VChip
+                  :color="currentStep === 1 ? 'primary' : 'success'"
+                  variant="flat"
+                  class="mr-3"
+                >
+                  1
+                </VChip>
+                <span class="text-left">
+                  <span class="d-block text-body-1 font-weight-medium">
+                    {{ UI_STRINGS.PRODUCTS.FORM.STEP_INFORMATION }}
+                  </span>
+                  <span class="d-block text-caption text-medium-emphasis">
+                    {{ UI_STRINGS.PRODUCTS.FORM.STEP_INFORMATION_DESCRIPTION }}
+                  </span>
                 </span>
-                <span class="d-block text-caption text-medium-emphasis">
-                  {{ UI_STRINGS.PRODUCTS.FORM.STEP_VARIANTS_DESCRIPTION }}
+              </BaseButton>
+
+              <VSpacer />
+
+              <BaseButton
+                variant="text"
+                class="text-none"
+                height="auto"
+                :block="false"
+                :disabled="!isEditMode && currentStep !== 2"
+                :aria-current="currentStep === 2 ? 'step' : undefined"
+                @click="navigateToStep(2)"
+              >
+                <VChip
+                  :color="currentStep === 2 ? 'primary' : 'default'"
+                  variant="tonal"
+                  class="mr-3"
+                >
+                  2
+                </VChip>
+                <span class="text-left">
+                  <span class="d-block text-body-1 font-weight-medium">
+                    {{ UI_STRINGS.PRODUCTS.FORM.STEP_VARIANTS }}
+                  </span>
+                  <span class="d-block text-caption text-medium-emphasis">
+                    {{ UI_STRINGS.PRODUCTS.FORM.STEP_VARIANTS_DESCRIPTION }}
+                  </span>
                 </span>
-              </span>
-            </BaseButton>
-          </div>
-        </VCardText>
-      </VCard>
+              </BaseButton>
+            </div>
+          </VCardText>
+        </VCard>
 
-      <ProductInformationStep
-        v-if="currentStep === 1"
-        :attribute-sets="attributeSets"
-        :image-uploading="productStore.loading.uploadFile"
-        :vendor-name="vendorName"
-        :product-image="productImage"
-        :product-image-error="errors.product_image"
-        @upload="handleImageUpload"
-        @attribute-set-change="handleAttributeSetChange"
-      />
-      <ProductVariantsStep
-        v-if="currentStep === 2"
-        :image-uploading-index="imageUploadingIndex"
-        @upload-image="handleVariantImageUpload"
-      />
-
-      <div class="d-flex justify-space-between mt-5">
-        <BaseButton
-          :block="false"
-          variant="outlined"
-          :disabled="currentStep === 1"
-          @click="goToPreviousStep"
-        >
-          {{ UI_STRINGS.PRODUCTS.FORM.BACK }}
-        </BaseButton>
-
-        <BaseButton
+        <ProductInformationStep
           v-if="currentStep === 1"
-          :block="false"
-          color="primary"
-          variant="flat"
-          :disabled="productStore.loading.uploadFile"
-          @click="goToNextStep"
-        >
-          {{ UI_STRINGS.PRODUCTS.FORM.CONTINUE }}
-        </BaseButton>
-        <BaseButton
-          v-else
-          :block="false"
-          color="primary"
-          variant="flat"
-          :loading="productStore.loading.createProduct || productStore.loading.updateProduct"
-          @click="submitProduct"
-        >
-          {{ isEditMode ? UI_STRINGS.PRODUCTS.FORM.UPDATE : UI_STRINGS.PRODUCTS.FORM.CREATE }}
-        </BaseButton>
-      </div>
-    </template>
+          :attribute-sets="attributeSets"
+          :image-uploading="productStore.loading.uploadFile"
+          :vendor-name="vendorName"
+          :product-image="productImage"
+          :product-image-error="errors.product_image"
+          @upload="handleImageUpload"
+          @attribute-set-change="handleAttributeSetChange"
+        />
+        <ProductVariantsStep
+          v-if="currentStep === 2"
+          :image-uploading-index="imageUploadingIndex"
+          @upload-image="handleVariantImageUpload"
+        />
 
-    <VSnackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
-      {{ snackbar.message }}
-    </VSnackbar>
-  </VContainer>
+        <div class="d-flex justify-space-between mt-5">
+          <BaseButton
+            :block="false"
+            variant="outlined"
+            :disabled="currentStep === 1"
+            @click="goToPreviousStep"
+          >
+            {{ UI_STRINGS.PRODUCTS.FORM.BACK }}
+          </BaseButton>
+
+          <BaseButton
+            v-if="currentStep === 1"
+            :block="false"
+            color="primary"
+            variant="flat"
+            :disabled="productStore.loading.uploadFile"
+            @click="goToNextStep"
+          >
+            {{ UI_STRINGS.PRODUCTS.FORM.CONTINUE }}
+          </BaseButton>
+          <BaseButton
+            v-else
+            :block="false"
+            color="primary"
+            variant="flat"
+            :loading="productStore.loading.createProduct || productStore.loading.updateProduct"
+            @click="submitProduct"
+          >
+            {{ isEditMode ? UI_STRINGS.PRODUCTS.FORM.UPDATE : UI_STRINGS.PRODUCTS.FORM.CREATE }}
+          </BaseButton>
+        </div>
+      </template>
+
+      <VSnackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
+        {{ snackbar.message }}
+      </VSnackbar>
+    </VContainer>
+  </template>
 </template>

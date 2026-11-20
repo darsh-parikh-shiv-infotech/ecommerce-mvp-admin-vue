@@ -20,14 +20,39 @@ const itemSlots = {
   actions: "item.actions",
 };
 const headers: BaseTableHeader[] = [
-  { title: "Id", key: "id" },
-  { title: "Title", key: "title" },
-  { title: "Product Image", key: "product_image", minWidth: 110 },
-  { title: "Attribute Set", key: "attribute_set.name", minWidth: 110 },
-  { title: "Vendor", key: "vendor.full_name", minWidth: 110 },
-  { title: "Status", key: "status", minWidth: 110 },
-  { title: "Created", key: "createdAt", minWidth: 130 },
-  { title: "Actions", key: "actions", align: "end", sortable: false },
+  { title: UI_STRINGS.PRODUCTS.TABLE_HEADERS.ID, key: "id" },
+  { title: UI_STRINGS.PRODUCTS.TABLE_HEADERS.TITLE, key: "title" },
+  {
+    title: UI_STRINGS.PRODUCTS.TABLE_HEADERS.IMAGE,
+    key: "product_image",
+    minWidth: 110,
+  },
+  {
+    title: UI_STRINGS.PRODUCTS.TABLE_HEADERS.ATTRIBUTE_SET,
+    key: "attribute_set.name",
+    minWidth: 110,
+  },
+  {
+    title: UI_STRINGS.PRODUCTS.TABLE_HEADERS.VENDOR,
+    key: "vendor.full_name",
+    minWidth: 110,
+  },
+  {
+    title: UI_STRINGS.PRODUCTS.TABLE_HEADERS.STATUS,
+    key: "status",
+    minWidth: 110,
+  },
+  {
+    title: UI_STRINGS.PRODUCTS.TABLE_HEADERS.CREATED,
+    key: "createdAt",
+    minWidth: 130,
+  },
+  {
+    title: UI_STRINGS.PRODUCTS.TABLE_HEADERS.ACTIONS,
+    key: "actions",
+    align: "end",
+    sortable: false,
+  },
 ];
 const router = useRouter();
 const showSnackbar = ref(false);
@@ -96,6 +121,7 @@ function addProduct() {
         :items="products"
         :page="pagination.currentPage"
         :items-per-page="pagination.pageSize"
+        :min-width="1280"
         :total-items="pagination.totalItems"
         :empty-text="UI_STRINGS.PRODUCTS.EMPTY_TITLE"
         @update:options="handleTableOptions"
@@ -168,7 +194,6 @@ function addProduct() {
               variant="text"
               :block="false"
               :aria-label="`${UI_STRINGS.PRODUCTS.EDIT_ACTION} ${item.title}`"
-              :title="UI_STRINGS.PRODUCTS.ACTIONS_UNAVAILABLE"
               @click="editProduct(item.id)"
             >
               <v-icon icon="mdi-pencil-outline" />

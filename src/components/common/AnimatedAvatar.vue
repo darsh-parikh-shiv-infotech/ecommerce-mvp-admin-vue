@@ -3,6 +3,7 @@ import { ref, toRef } from "vue";
 import remyModelUrl from "../../assets/avatar/avatar.glb?url";
 import { useAnimatedAvatar } from "../../utils/avatar/useAnimatedAvatar";
 import type { AvatarVariant } from "../../utils/avatar/three-avatar";
+import { UI_STRINGS } from "../../utils/constants";
 
 const props = withDefaults(
   defineProps<{
@@ -24,33 +25,44 @@ const { hasError, isLoading } = useAnimatedAvatar(container, {
 </script>
 
 <template>
-  <div
+  <button
     ref="container"
+    type="button"
     class="animated-avatar"
     :class="[`animated-avatar--${variant}`, { 'animated-avatar--loading': isLoading }]"
     :aria-busy="isLoading"
-    aria-label="Animated character. Click to make it wave."
-    role="img"
+    :aria-label="UI_STRINGS.AVATAR.INTERACTION_LABEL"
+    :disabled="isLoading || hasError"
   >
-    <div v-if="isLoading && !hasError" class="animated-avatar__loader" role="status">
+    <span v-if="isLoading && !hasError" class="animated-avatar__loader" role="status">
       <span class="animated-avatar__spinner" />
-      <span class="animated-avatar__sr">Loading character</span>
-    </div>
-    <div v-if="hasError" class="animated-avatar__fallback">Avatar unavailable</div>
-  </div>
+      <span class="animated-avatar__sr">
+        {{ UI_STRINGS.AVATAR.LOADING }}
+      </span>
+    </span>
+
+    <span v-if="hasError" class="animated-avatar__fallback">
+      {{ UI_STRINGS.AVATAR.UNAVAILABLE }}
+    </span>
+  </button>
 </template>
 
 <style scoped>
 .animated-avatar {
   position: relative;
+  display: block;
   width: 100%;
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  padding: 0;
+  border: 0;
   cursor: pointer;
-  pointer-events: auto;
-  /* Override from the parent with --avatar-bg, e.g. `transparent`. */
   background: var(--avatar-bg, #252535);
+}
+
+.animated-avatar:disabled {
+  cursor: default;
 }
 
 .animated-avatar :deep(canvas) {

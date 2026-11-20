@@ -119,9 +119,21 @@ export const UI_STRINGS = {
   APP_NAME: "ecommerce",
   APP_DESCRIPTION: "STORE MANAGEMENT",
 
+  AVATAR: {
+    INTERACTION_LABEL: "Animated character. Activate to make it wave.",
+    LOADING: "Loading character",
+    UNAVAILABLE: "Avatar unavailable",
+  },
+
+  DASHBOARD: {
+    GREETING: "Hello Admin",
+  },
+
   ADMIN: {
     WORKSPACE: "Workspace",
     OVERVIEW: "Overview",
+    CLOSE_NAVIGATION: "Close navigation",
+    FALLBACK_ROLE: "admin",
     SIGNED_IN_AS: "SIGNED IN AS",
     SIGN_OUT: "Sign out",
     FALLBACK_USER: "Store Admin",
@@ -235,6 +247,18 @@ export const UI_STRINGS = {
     DELETE: "Delete",
     RETRY: "Retry",
     BACK_TO_PRODUCTS: "Back to products",
+    TABLE_HEADERS: {
+      ID: "ID",
+      TITLE: "Title",
+      IMAGE: "Product Image",
+      ATTRIBUTE_SET: "Attribute Set",
+      VENDOR: "Vendor",
+      STATUS: "Status",
+      CREATED: "Created",
+      ACTIONS: "Actions",
+    },
+    IMAGE_ALT: "product image",
+    IMAGE_MISSING: "has no product image",
     FORM: {
       DESCRIPTION: "Manage product information and variants.",
       CANCEL: "Cancel",

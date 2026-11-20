@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Field, useFieldArray, useFormContext } from "vee-validate";
 import { VBtn, VCard, VCardText, VChip, VFileInput, VImg, VTable } from "vuetify/components";
-import type { VariantPayload } from "../../store/common.types";
+import type { VariantFormValues } from "../../store/common.types";
 import BaseTextField from "../common/BaseTextField.vue";
 import BaseSelect from "../common/BaseSelect.vue";
 import { ref } from "vue";
@@ -15,9 +15,9 @@ const emit = defineEmits<{
   uploadImage: [index: number, file: File];
 }>();
 
-const { fields, push, remove } = useFieldArray<VariantPayload>("variants");
+const { fields, push, remove } = useFieldArray<VariantFormValues>("variants");
 const { validateField, setFieldTouched } = useFormContext<{
-  variants: VariantPayload[];
+  variants: VariantFormValues[];
 }>();
 const imageErrors = ref<Record<number, string>>({});
 
@@ -35,12 +35,12 @@ const fieldsToValidate = [
   "status",
 ] as const;
 
-function createVariant(): VariantPayload {
+function createVariant(): VariantFormValues {
   return {
     title: "",
     code: "",
-    price: 0,
-    fake_price: 0,
+    price: "",
+    fake_price: "",
     available_quantity: 0,
     on_hand_quantity: 0,
     product_variant_image: [],
@@ -287,7 +287,7 @@ function removeVariant(index: number) {
                   color="error"
                   variant="text"
                   size="small"
-                  :disabled="fields.length === 1"
+                  :disabled="fields.length === 1 || imageUploadingIndex !== null"
                   :aria-label="`${UI_STRINGS.PRODUCTS.FORM.REMOVE_VARIANT} ${index + 1}`"
                   @click="removeVariant(index)"
                 />
