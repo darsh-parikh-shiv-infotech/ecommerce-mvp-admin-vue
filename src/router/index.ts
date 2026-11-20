@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, type RouteLocationNormalized } from "vue-router";
 import { useAuthStore } from "../store/auth.store.ts";
 import { ROUTE_NAMES, ROUTE_PATHS, UI_STRINGS } from "../utils/constants";
 import AdminLayout from "../layouts/AdminLayout.vue";
@@ -24,7 +24,7 @@ const routes = [
         redirect: { name: ROUTE_NAMES.DASHBOARD },
       },
       {
-        path: "dashboard",
+        path: ROUTE_PATHS.DASHBOARD,
         name: ROUTE_NAMES.DASHBOARD,
         component: () => import("../views/dashboard/DashboardView.vue"),
         meta: {
@@ -32,23 +32,39 @@ const routes = [
         },
       },
       {
-        path: "attribute-sets",
+        path: ROUTE_PATHS.ATTRIBUTE_SETS,
         name: ROUTE_NAMES.ATTRIBUTE_SETS,
         component: () => import("../views/attribute-set/AttributeSetView.vue"),
         meta: {
           title: UI_STRINGS.ATTRIBUTE_SET.TITLE,
         },
       },
-      /*
       {
-        path: "products",
+        path: ROUTE_PATHS.PRODUCTS,
         name: ROUTE_NAMES.PRODUCTS,
-        component: () => import("../views/common/ComingSoonView.vue"),
+        component: () => import("../views/product/ProductView.vue"),
         meta: {
-          title: "Products",
+          title: UI_STRINGS.PRODUCTS.TITLE,
         },
       },
-      */
+      {
+        path: "products/:id",
+        name: ROUTE_NAMES.PRODUCT_DETAIL,
+        component: () => import("../views/product/ProductDetailView.vue"),
+        meta: {
+          title: UI_STRINGS.PRODUCTS.DETAIL_TITLE,
+        },
+      },
+      {
+        path: "/products/create",
+        name: ROUTE_NAMES.PRODUCT_CREATE,
+        component: () => import("../views/product/ProductFormView.vue"),
+      },
+      {
+        path: "/products/:id/edit",
+        name: ROUTE_NAMES.PRODUCT_EDIT,
+        component: () => import("../views/product/ProductFormView.vue"),
+      },
     ],
   },
 ];
@@ -58,10 +74,10 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to: RouteLocationNormalized) => {
   const authStore = useAuthStore();
 
-  authStore.validateSession();
+  await authStore.initializeAuth();
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return {

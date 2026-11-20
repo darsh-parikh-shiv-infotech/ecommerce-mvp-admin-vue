@@ -19,7 +19,6 @@ const api = axios.create({
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     [API_CONFIG.HEADERS.ACCEPT]: API_CONFIG.CONTENT_TYPES.JSON,
-    [API_CONFIG.HEADERS.CONTENT_TYPE]: API_CONFIG.CONTENT_TYPES.JSON,
   },
 });
 
@@ -43,13 +42,12 @@ function handleRequest(config: InternalAxiosRequestConfig): InternalAxiosRequest
 
   config.headers.set(API_CONFIG.HEADERS.ACCEPT, API_CONFIG.CONTENT_TYPES.JSON);
 
-  if (token) {
+  if (token && !config.headers.has(API_CONFIG.HEADERS.AUTHORIZATION)) {
     config.headers.set(API_CONFIG.HEADERS.AUTHORIZATION, `${API_CONFIG.AUTH_SCHEME} ${token}`);
   }
 
   return config;
 }
-
 function handleRequestError(error: unknown): Promise<never> {
   return Promise.reject(normalizeApiError(error));
 }

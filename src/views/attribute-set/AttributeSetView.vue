@@ -166,11 +166,7 @@ async function handleSave(payload: AttributeSetPayload) {
             variant="tonal"
             :color="item.status === 'active' ? 'success' : 'warning'"
           >
-            {{
-              item.status === "active"
-                ? UI_STRINGS.ATTRIBUTE_SET.ACTIVE
-                : UI_STRINGS.ATTRIBUTE_SET.INACTIVE
-            }}
+            {{ item.status === "active" ? UI_STRINGS.COMMON.ACTIVE : UI_STRINGS.COMMON.INACTIVE }}
           </v-chip>
         </template>
 
@@ -184,7 +180,7 @@ async function handleSave(payload: AttributeSetPayload) {
               icon
               size="small"
               variant="text"
-              :aria-label="`${UI_STRINGS.ATTRIBUTE_SET.EDIT_ACTION} ${item.name}`"
+              :aria-label="`${UI_STRINGS.COMMON.EDIT} ${item.name}`"
               @click="openEditDialog(item)"
             >
               <v-icon icon="mdi-pencil-outline" />

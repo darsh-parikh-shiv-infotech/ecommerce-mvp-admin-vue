@@ -11,11 +11,13 @@ import {
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
-  createAvatarRig,
-  createCenteredAvatar,
+  clearPoseOffsets,
   disposeAvatarModel,
   frameAvatarCamera,
+  prepareAvatar,
   updateAvatarPose,
+  type AvatarAnimator,
+  type AvatarFraming,
   type AvatarPointer,
   type AvatarRig,
   type AvatarVariant,
@@ -27,22 +29,40 @@ interface UseAnimatedAvatarOptions {
   modelUrl: string;
 }
 
+/** [min, max] in milliseconds. */
+type DelayRange = readonly [number, number];
+
+/** Standing still before the very first greeting. */
+const FIRST_GREETING_DELAY: DelayRange = [2500, 4500];
+/** Standing still between greetings. */
+const NEXT_GREETING_DELAY: DelayRange = [7000, 15000];
+
+function randomDelay([min, max]: DelayRange): number {
+  return min + Math.random() * (max - min);
+}
+
 export function useAnimatedAvatar(
   container: Ref<HTMLDivElement | null>,
   options: UseAnimatedAvatarOptions,
-): Readonly<Ref<boolean>> {
+): { hasError: Readonly<Ref<boolean>>; isLoading: Readonly<Ref<boolean>> } {
   const hasError = ref(false);
+  /** True until the model is loaded AND its first frame has been drawn. */
+  const isLoading = ref(true);
 
   let renderer: WebGLRenderer | null = null;
   let camera: PerspectiveCamera | null = null;
   let scene: Group | null = null;
   let avatar: Group | null = null;
   let rig: AvatarRig | null = null;
+  let animator: AvatarAnimator | null = null;
+  let framing: AvatarFraming | null = null;
 
   let resizeObserver: ResizeObserver | null = null;
   let intersectionObserver: IntersectionObserver | null = null;
   let activeTrackingTarget: HTMLElement | Window | null = null;
+  let activeClickTarget: HTMLElement | null = null;
   let animationFrame = 0;
+  let greetingTimer = 0;
   let isVisible = true;
   let isReducedMotion = false;
   let isDisposed = false;
@@ -59,14 +79,41 @@ export function useAnimatedAvatar(
     previousFrame: 0,
   };
 
-  function updateCameraFraming(): void {
-    if (!avatar || !camera) return;
+  /* ------------------------------ greeting loop ------------------------------ */
 
-    frameAvatarCamera(avatar, camera, options.variant.value);
+  function scheduleGreeting(range: DelayRange): void {
+    window.clearTimeout(greetingTimer);
+    if (isDisposed || isReducedMotion || !animator) return;
+
+    greetingTimer = window.setTimeout(() => {
+      // Nobody is looking (scrolled away / background tab): try again later.
+      if (!isVisible || document.hidden) {
+        scheduleGreeting(NEXT_GREETING_DELAY);
+        return;
+      }
+
+      // When this greeting ends, `onGreetingEnd` schedules the next one.
+      if (!animator?.playGreeting()) scheduleGreeting(NEXT_GREETING_DELAY);
+    }, randomDelay(range));
+  }
+
+  function handleClick(): void {
+    if (isReducedMotion || !animator) return;
+
+    // Ignored while a greeting is already playing; the next click after it ends greets again.
+    if (animator.playGreeting()) window.clearTimeout(greetingTimer);
+  }
+
+  /* -------------------------------- rendering -------------------------------- */
+
+  function updateCameraFraming(): void {
+    if (!framing || !camera) return;
+
+    frameAvatarCamera(framing, camera, options.variant.value);
   }
 
   function renderFrame(timestamp: number): void {
-    if (isDisposed || !renderer || !scene || !camera || !rig || !isVisible) return;
+    if (isDisposed || !renderer || !scene || !camera || !isVisible) return;
 
     if (!clock.start) clock.start = timestamp;
 
@@ -76,8 +123,14 @@ export function useAnimatedAvatar(
       : 1 / 60;
     clock.previousFrame = timestamp;
 
-    updateAvatarPose(rig, pointer, options.variant.value, elapsed, delta, isReducedMotion);
+    if (animator && rig) {
+      clearPoseOffsets(rig);
+      animator.update(delta);
+      updateAvatarPose(rig, pointer, options.variant.value, elapsed, delta);
+    }
+
     renderer.render(scene, camera);
+    isLoading.value = false;
 
     if (!isReducedMotion) {
       animationFrame = requestAnimationFrame(renderFrame);
@@ -85,13 +138,14 @@ export function useAnimatedAvatar(
   }
 
   function startRendering(): void {
-    if (isDisposed || !isVisible || !renderer || !scene || !camera || !rig) return;
+    if (isDisposed || !isVisible || !renderer || !scene || !camera) return;
 
     cancelAnimationFrame(animationFrame);
 
     if (isReducedMotion) {
-      updateAvatarPose(rig, pointer, options.variant.value, 0, 0, true);
+      // Single still frame (the animator already holds the standing pose).
       renderer.render(scene, camera);
+      isLoading.value = false;
       return;
     }
 
@@ -111,6 +165,8 @@ export function useAnimatedAvatar(
     renderer.setSize(width, height, false);
     startRendering();
   }
+
+  /* ---------------------------------- input ---------------------------------- */
 
   function handlePointerMove(event: Event): void {
     if (!(event instanceof PointerEvent) || options.variant.value !== "login") return;
@@ -164,13 +220,33 @@ export function useAnimatedAvatar(
     }
   }
 
+  /** Clicking anywhere on the tracking panel (login) or the avatar box itself (dashboard). */
+  function bindClickTarget(): void {
+    if (isDisposed) return;
+
+    const nextTarget = options.trackingTarget.value ?? container.value;
+    if (activeClickTarget === nextTarget) return;
+
+    activeClickTarget?.removeEventListener("click", handleClick);
+    activeClickTarget = nextTarget;
+    activeClickTarget?.addEventListener("click", handleClick);
+  }
+
+  /* --------------------------------- lifecycle -------------------------------- */
+
   function cleanup(): void {
     isDisposed = true;
     cancelAnimationFrame(animationFrame);
+    window.clearTimeout(greetingTimer);
     resizeObserver?.disconnect();
     intersectionObserver?.disconnect();
     window.removeEventListener("resize", resizeRenderer);
     unbindTrackingTarget();
+    activeClickTarget?.removeEventListener("click", handleClick);
+    activeClickTarget = null;
+
+    animator?.dispose();
+    animator = null;
 
     if (avatar) {
       disposeAvatarModel(avatar);
@@ -183,6 +259,7 @@ export function useAnimatedAvatar(
     scene = null;
     camera = null;
     rig = null;
+    framing = null;
   }
 
   async function initializeAvatar(): Promise<void> {
@@ -201,6 +278,14 @@ export function useAnimatedAvatar(
       renderer.toneMapping = ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.15;
       renderer.setClearColor(0x000000, 0);
+      // Size the canvas by CSS. `setSize(w, h, false)` leaves its style alone, and scoped
+      // component styles never reach an element created in JS, so without this the canvas
+      // is drawn at width * devicePixelRatio CSS pixels and gets cropped by the container.
+      Object.assign(renderer.domElement.style, {
+        display: "block",
+        width: "100%",
+        height: "100%",
+      });
       container.value.appendChild(renderer.domElement);
 
       scene.add(new AmbientLight(0xffffff, 2.0));
@@ -220,9 +305,19 @@ export function useAnimatedAvatar(
         return;
       }
 
-      avatar = createCenteredAvatar(gltf.scene);
+      const prepared = prepareAvatar(gltf.scene, gltf.animations);
+      avatar = prepared.avatar;
+      rig = prepared.rig;
+      animator = prepared.animator;
+      framing = prepared.framing;
+
+      if (animator) {
+        animator.onGreetingEnd = () => scheduleGreeting(NEXT_GREETING_DELAY);
+      } else {
+        console.warn("[AnimatedAvatar] No animation clip found in the GLB; showing a static pose.");
+      }
+
       scene.add(avatar);
-      rig = createAvatarRig(gltf.scene);
       updateCameraFraming();
 
       resizeObserver = new ResizeObserver(resizeRenderer);
@@ -241,10 +336,13 @@ export function useAnimatedAvatar(
 
       window.addEventListener("resize", resizeRenderer);
       bindTrackingTarget();
+      bindClickTarget();
       resizeRenderer();
+      scheduleGreeting(FIRST_GREETING_DELAY);
     } catch (error) {
       console.error("[AnimatedAvatar] Failed to load model:", error);
       hasError.value = true;
+      isLoading.value = false;
       cleanup();
     }
   }
@@ -258,11 +356,12 @@ export function useAnimatedAvatar(
     pointer.targetX = 0;
     pointer.targetY = 0;
     bindTrackingTarget();
+    bindClickTarget();
     updateCameraFraming();
     resizeRenderer();
   });
 
   onBeforeUnmount(cleanup);
 
-  return hasError;
+  return { hasError, isLoading };
 }

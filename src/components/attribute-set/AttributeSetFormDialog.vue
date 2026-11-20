@@ -146,12 +146,8 @@ const submitForm = handleSubmit((values) => {
             </div>
 
             <v-radio-group v-model="status" v-bind="statusAttrs" inline hide-details>
-              <v-radio :label="UI_STRINGS.ATTRIBUTE_SET.ACTIVE" value="active" color="success" />
-              <v-radio
-                :label="UI_STRINGS.ATTRIBUTE_SET.INACTIVE"
-                value="inactive"
-                color="warning"
-              />
+              <v-radio :label="UI_STRINGS.COMMON.ACTIVE" value="active" color="success" />
+              <v-radio :label="UI_STRINGS.COMMON.INACTIVE" value="inactive" color="warning" />
             </v-radio-group>
           </div>
         </form>
@@ -167,7 +163,7 @@ const submitForm = handleSubmit((values) => {
           :disabled="loading"
           @click="closeDialog"
         >
-          {{ UI_STRINGS.ATTRIBUTE_SET.CANCEL }}
+          {{ UI_STRINGS.COMMON.CANCEL }}
         </BaseButton>
 
         <BaseButton size="small" :block="false" :loading="loading" @click="submitForm">

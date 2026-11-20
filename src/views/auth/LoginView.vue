@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import AnimatedAvatar from "../../components/common/AnimatedAvatar.vue";
 import { useRouter } from "vue-router";
 import { VIcon } from "vuetify/components";
 import { useAuthStore, type LoginCredentials } from "../../store/auth.store";
@@ -12,6 +11,7 @@ import { VForm, VSnackbar } from "vuetify/components";
 import BaseButton from "../../components/common/BaseButton.vue";
 import BaseTextField from "../../components/common/BaseTextField.vue";
 import { getPlaceholder } from "../../utils/placeholder.utils";
+import AnimatedAvatar from "../../components/common/AnimatedAvatar.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -236,8 +236,8 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
 }
 
 .float-card--welcome {
-  top: 17%;
-  left: 7%;
+  top: 10%;
+  left: 3%;
   padding: 14px 16px;
 }
 
@@ -269,8 +269,8 @@ const submitLogin = handleSubmit(async (values: LoginCredentials) => {
 }
 
 .float-card--stats {
-  right: 7%;
-  bottom: 14%;
+  right: 3%;
+  bottom: 7%;
   width: min(215px, 60%);
   align-items: stretch;
   gap: 11px;

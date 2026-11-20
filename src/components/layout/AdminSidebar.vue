@@ -16,7 +16,7 @@ const authStore = useAuthStore();
 
 const navigationItems = [
   {
-    label: "Overview",
+    label: UI_STRINGS.ADMIN.OVERVIEW,
     icon: "mdi-view-dashboard-outline",
     routeName: ROUTE_NAMES.DASHBOARD,
   },
@@ -24,6 +24,11 @@ const navigationItems = [
     label: UI_STRINGS.ATTRIBUTE_SET.TITLE,
     icon: "mdi-layers-outline",
     routeName: ROUTE_NAMES.ATTRIBUTE_SETS,
+  },
+  {
+    label: UI_STRINGS.PRODUCTS.TITLE,
+    icon: "mdi-briefcase",
+    routeName: ROUTE_NAMES.PRODUCTS,
   },
 ];
 
@@ -35,7 +40,7 @@ const userName = computed(() => {
   );
 });
 
-const userRole = computed(() => authStore.user?.role ?? "admin");
+const userRole = computed(() => authStore.user?.role ?? UI_STRINGS.ADMIN.FALLBACK_ROLE);
 </script>
 
 <template>
@@ -43,7 +48,7 @@ const userRole = computed(() => authStore.user?.role ?? "admin");
     v-if="mobileOpen"
     class="sidebar-backdrop d-block d-md-none"
     type="button"
-    aria-label="Close navigation"
+    :aria-label="UI_STRINGS.ADMIN.CLOSE_NAVIGATION"
     @click="emit('close')"
   />
 

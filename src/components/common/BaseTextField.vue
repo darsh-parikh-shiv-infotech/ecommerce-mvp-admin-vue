@@ -21,7 +21,7 @@ const model = defineModel<string | number | null>();
 <style scoped>
 .base-text-field :deep(.v-field) {
   border-radius: 12px;
-  background: #fffefa;
+  background: #fffffff2;
 }
 
 .base-text-field :deep(.v-field__input) {

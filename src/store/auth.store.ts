@@ -17,6 +17,17 @@ export interface AuthUser {
   role: string;
 }
 
+export interface AuthRoleResponse {
+  name: string;
+}
+
+export interface AuthUserResponse {
+  id: string | number;
+  email: string;
+  full_name?: string | null;
+  role: AuthRoleResponse;
+}
+
 export interface AuthLoginResponse {
   token: string;
 }
@@ -49,10 +60,14 @@ export const useAuthStore = defineStore("auth", {
   },
 
   actions: {
-    initializeAuth(): void {
+    async initializeAuth(): Promise<void> {
       if (this.isInitialized) return;
-      this.validateSession();
-      this.isInitialized = true;
+
+      try {
+        await this.validateSession();
+      } finally {
+        this.isInitialized = true;
+      }
     },
 
     async login(credentials: LoginCredentials): Promise<void> {
@@ -62,7 +77,7 @@ export const useAuthStore = defineStore("auth", {
       try {
         const response = await authService.login({ ...credentials, role: "Admin" });
         const token = response.token;
-        const user = getAuthUser(token);
+        const user = await getAuthUser(token);
         storageUtils.setAccessToken(token);
 
         this.accessToken = token;
@@ -93,7 +108,7 @@ export const useAuthStore = defineStore("auth", {
     clearError(): void {
       this.error = null;
     },
-    validateSession(): void {
+    async validateSession(): Promise<void> {
       const token = storageUtils.getAccessToken();
 
       if (!token) {
@@ -102,12 +117,14 @@ export const useAuthStore = defineStore("auth", {
       }
 
       try {
-        const user = getAuthUser(token);
+        const user = await getAuthUser(token);
 
         this.accessToken = token;
         this.user = user;
-      } catch {
+      } catch (error: unknown) {
         this.clearSession();
+        const apiError = isApiError(error) ? error : normalizeApiError(error);
+        this.error = apiError.message;
       }
     },
   },

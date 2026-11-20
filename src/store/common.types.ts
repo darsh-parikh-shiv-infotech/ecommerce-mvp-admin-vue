@@ -45,3 +45,81 @@ export interface AttributeSet {
   updatedAt: string;
   attributes: Attribute[];
 }
+
+export interface UploadedFile {
+  fileName: string;
+  url: string;
+}
+
+export interface Variant {
+  id: number;
+  product_id: number;
+  title: string;
+  available_quantity: number;
+  on_hand_quantity: number;
+  product_variant_image: string[];
+  code: string;
+  fake_price: string;
+  price: string;
+  status: "active" | "inactive";
+  createdAt?: string;
+}
+
+export interface AttributeSetReference {
+  id: number;
+  name: string;
+}
+
+export interface Product {
+  id: number;
+  title: string;
+  status: "active" | "inactive";
+  description: string;
+  product_image: string;
+  meta_title: string;
+  meta_key: string;
+  meta_description: string;
+  vendor: {
+    id: number;
+    full_name: string;
+  };
+  attribute_set: AttributeSetReference;
+  variants: Variant[];
+  createdAt: string;
+  variantAttributes: Attribute[];
+}
+
+export type VariantPayload = Omit<
+  Variant,
+  "id" | "product_id" | "createdAt" | "price" | "fake_price"
+> & {
+  id?: number;
+  price: number;
+  fake_price: number;
+};
+
+export interface ProductPayload {
+  title: string;
+  status: "active" | "inactive";
+  description: string;
+  product_image: string;
+  meta_title?: string;
+  meta_key?: string;
+  meta_description?: string;
+  auth_vendor_id: number;
+  attribute_set_id: number;
+  variants: VariantPayload[];
+  variantAttributes?: Attribute[];
+}
+
+export interface VariantFormValues {
+  id?: number;
+  title: string;
+  code: string;
+  price: string;
+  fake_price: string;
+  available_quantity: number | undefined;
+  on_hand_quantity: number | undefined;
+  product_variant_image: string[];
+  status: "active" | "inactive";
+}
