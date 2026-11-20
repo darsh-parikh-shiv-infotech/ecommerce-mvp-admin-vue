@@ -18,7 +18,7 @@ withDefaults(
     loading?: boolean;
     page?: number;
     itemsPerPage?: number;
-    totalItems: number;
+    totalItems?: number;
     itemValue?: string;
     emptyText?: string;
     hideFooter?: boolean;
@@ -29,6 +29,7 @@ withDefaults(
     loading: false,
     page: 1,
     itemsPerPage: 10,
+    totalItems: undefined,
     itemValue: "id",
     emptyText: UI_STRINGS.TABLE.EMPTY,
     hideFooter: false,
@@ -58,7 +59,7 @@ const emit = defineEmits<{
       :loading="loading"
       :page="page"
       :items-per-page="itemsPerPage"
-      :items-length="totalItems"
+      :items-length="totalItems ?? items.length"
       :item-value="itemValue"
       :hide-default-footer="hideFooter"
       :loading-text="UI_STRINGS.TABLE.LOADING"

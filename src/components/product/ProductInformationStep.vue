@@ -95,8 +95,8 @@ function handleFileChange(file: File | File[] | null) {
                 v-model="status"
                 :label="UI_STRINGS.PRODUCTS.FORM.PRODUCT_STATUS"
                 :items="[
-                  { title: UI_STRINGS.PRODUCTS.ACTIVE, value: 'active' },
-                  { title: UI_STRINGS.PRODUCTS.INACTIVE, value: 'inactive' },
+                  { title: UI_STRINGS.COMMON.ACTIVE, value: 'active' },
+                  { title: UI_STRINGS.COMMON.INACTIVE, value: 'inactive' },
                 ]"
               />
             </VCol>

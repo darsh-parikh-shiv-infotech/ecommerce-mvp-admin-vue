@@ -165,9 +165,7 @@ function addProduct() {
             variant="tonal"
             :color="item.status === 'active' ? 'success' : 'warning'"
           >
-            {{
-              item.status === "active" ? UI_STRINGS.PRODUCTS.ACTIVE : UI_STRINGS.PRODUCTS.INACTIVE
-            }}
+            {{ item.status === "active" ? UI_STRINGS.COMMON.ACTIVE : UI_STRINGS.COMMON.INACTIVE }}
           </v-chip>
         </template>
 
@@ -193,7 +191,7 @@ function addProduct() {
               size="small"
               variant="text"
               :block="false"
-              :aria-label="`${UI_STRINGS.PRODUCTS.EDIT_ACTION} ${item.title}`"
+              :aria-label="`${UI_STRINGS.COMMON.EDIT} ${item.title}`"
               @click="editProduct(item.id)"
             >
               <v-icon icon="mdi-pencil-outline" />

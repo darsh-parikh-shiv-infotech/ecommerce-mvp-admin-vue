@@ -170,7 +170,7 @@ onBeforeUnmount(() => {
 
       <div class="d-flex flex-wrap ga-2">
         <BaseButton :block="false" @click="fetchProduct(productId)">
-          {{ UI_STRINGS.PRODUCTS.RETRY }}
+          {{ UI_STRINGS.COMMON.RETRY }}
         </BaseButton>
         <BaseButton variant="outlined" :block="false" @click="goToProducts">
           {{ UI_STRINGS.PRODUCTS.BACK_TO_PRODUCTS }}
@@ -228,8 +228,8 @@ onBeforeUnmount(() => {
                 >
                   {{
                     product.status === "active"
-                      ? UI_STRINGS.PRODUCTS.ACTIVE
-                      : UI_STRINGS.PRODUCTS.INACTIVE
+                      ? UI_STRINGS.COMMON.ACTIVE
+                      : UI_STRINGS.COMMON.INACTIVE
                   }}
                 </VChip>
               </div>
@@ -311,9 +311,7 @@ onBeforeUnmount(() => {
                 variant="tonal"
               >
                 {{
-                  item.status === "active"
-                    ? UI_STRINGS.PRODUCTS.ACTIVE
-                    : UI_STRINGS.PRODUCTS.INACTIVE
+                  item.status === "active" ? UI_STRINGS.COMMON.ACTIVE : UI_STRINGS.COMMON.INACTIVE
                 }}
               </VChip>
             </template>
@@ -369,7 +367,7 @@ onBeforeUnmount(() => {
             :disabled="deletingVariantId !== null"
             @click="closeDeleteDialog"
           >
-            {{ UI_STRINGS.PRODUCTS.CANCEL }}
+            {{ UI_STRINGS.COMMON.CANCEL }}
           </BaseButton>
 
           <BaseButton
@@ -379,13 +377,13 @@ onBeforeUnmount(() => {
             :loading="deletingVariantId !== null"
             @click="confirmDeleteVariant"
           >
-            {{ UI_STRINGS.PRODUCTS.DELETE }}
+            {{ UI_STRINGS.COMMON.DELETE }}
           </BaseButton>
         </VCardText>
       </VCard>
     </VDialog>
 
-    <VSnackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
+    <VSnackbar v-model="snackbar.show" :color="snackbar.color" location="top end" timeout="3000">
       {{ snackbar.message }}
     </VSnackbar>
   </VContainer>

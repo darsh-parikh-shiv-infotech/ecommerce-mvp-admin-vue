@@ -1,11 +1,49 @@
 <script setup lang="ts">
 import { Field, useFieldArray, useFormContext } from "vee-validate";
-import { VBtn, VCard, VCardText, VChip, VFileInput, VImg, VTable } from "vuetify/components";
+import { VBtn, VCard, VCardText, VChip, VFileInput, VImg } from "vuetify/components";
 import type { VariantFormValues } from "../../store/common.types";
 import BaseTextField from "../common/BaseTextField.vue";
 import BaseSelect from "../common/BaseSelect.vue";
 import { ref } from "vue";
 import { UI_STRINGS } from "../../utils/constants";
+import type { BaseTableHeader } from "../common/BaseTable.vue";
+import BaseTable from "../common/BaseTable.vue";
+
+const variantHeaders: BaseTableHeader[] = [
+  { title: UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.TITLE, key: "title", sortable: false },
+  { title: UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.CODE, key: "code", sortable: false },
+  { title: UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.PRICE, key: "price", sortable: false },
+  {
+    title: UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.FAKE_PRICE,
+    key: "fake_price",
+    sortable: false,
+  },
+  {
+    title: UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.AVAILABLE,
+    key: "available_quantity",
+    sortable: false,
+  },
+  {
+    title: UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.ON_HAND,
+    key: "on_hand_quantity",
+    sortable: false,
+  },
+  { title: UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.STATUS, key: "status", sortable: false },
+  { title: UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.IMAGES, key: "images", sortable: false },
+  { title: UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.ACTION, key: "actions", sortable: false },
+];
+
+const variantSlots = {
+  title: "item.title",
+  code: "item.code",
+  price: "item.price",
+  fakePrice: "item.fake_price",
+  available: "item.available_quantity",
+  onHand: "item.on_hand_quantity",
+  status: "item.status",
+  images: "item.images",
+  actions: "item.actions",
+};
 
 defineProps<{
   imageUploadingIndex: number | null;
@@ -22,8 +60,8 @@ const { validateField, setFieldTouched } = useFormContext<{
 const imageErrors = ref<Record<number, string>>({});
 
 const statusOptions = [
-  { title: UI_STRINGS.PRODUCTS.ACTIVE, value: "active" },
-  { title: UI_STRINGS.PRODUCTS.INACTIVE, value: "inactive" },
+  { title: UI_STRINGS.COMMON.ACTIVE, value: "active" },
+  { title: UI_STRINGS.COMMON.INACTIVE, value: "inactive" },
 ];
 const fieldsToValidate = [
   "title",
@@ -122,179 +160,169 @@ function removeVariant(index: number) {
       </div>
 
       <div v-else class="variant-table-wrapper">
-        <VTable class="variant-table">
-          <thead>
-            <tr>
-              <th>{{ UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.TITLE }}</th>
-              <th>{{ UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.CODE }}</th>
-              <th>{{ UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.PRICE }}</th>
-              <th>{{ UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.FAKE_PRICE }}</th>
-              <th>{{ UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.AVAILABLE }}</th>
-              <th>{{ UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.ON_HAND }}</th>
-              <th>{{ UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.STATUS }}</th>
-              <th>{{ UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.IMAGES }}</th>
-              <th>{{ UI_STRINGS.PRODUCTS.FORM.VARIANT_COLUMNS.ACTION }}</th>
-            </tr>
-          </thead>
+        <BaseTable
+          :headers="variantHeaders"
+          :items="fields"
+          item-value="key"
+          :items-per-page="-1"
+          :hide-footer="true"
+          :min-width="1400"
+          :total-items="fields.length"
+        >
+          <template #[variantSlots.title]="{ index }">
+            <Field
+              v-slot="{ value, handleChange, handleBlur, errorMessage }"
+              :name="`variants[${index}].title`"
+            >
+              <BaseTextField
+                :model-value="value"
+                :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_TITLE_PLACEHOLDER"
+                density="compact"
+                :error-messages="errorMessage"
+                @update:model-value="handleChange"
+                @blur="handleBlur"
+              />
+            </Field>
+          </template>
 
-          <tbody>
-            <tr v-for="(entry, index) in fields" :key="entry.key">
-              <td>
-                <Field
-                  v-slot="{ value, handleChange, handleBlur, errorMessage }"
-                  :name="`variants[${index}].title`"
-                >
-                  <BaseTextField
-                    :model-value="value"
-                    :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_TITLE_PLACEHOLDER"
-                    density="compact"
-                    :error-messages="errorMessage"
-                    @update:model-value="handleChange"
-                    @blur="handleBlur"
-                  />
-                </Field>
-              </td>
+          <template #[variantSlots.code]="{ index }">
+            <Field
+              v-slot="{ value, handleChange, handleBlur, errorMessage }"
+              :name="`variants[${index}].code`"
+            >
+              <BaseTextField
+                :model-value="value"
+                :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_CODE_PLACEHOLDER"
+                density="compact"
+                :error-messages="errorMessage"
+                @update:model-value="handleChange"
+                @blur="handleBlur"
+              />
+            </Field>
+          </template>
 
-              <td>
-                <Field
-                  v-slot="{ value, handleChange, handleBlur, errorMessage }"
-                  :name="`variants[${index}].code`"
-                >
-                  <BaseTextField
-                    :model-value="value"
-                    :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_CODE_PLACEHOLDER"
-                    density="compact"
-                    :error-messages="errorMessage"
-                    @update:model-value="handleChange"
-                    @blur="handleBlur"
-                  />
-                </Field>
-              </td>
+          <template #[variantSlots.price]="{ index }">
+            <Field
+              v-slot="{ value, handleChange, handleBlur, errorMessage }"
+              :name="`variants[${index}].price`"
+            >
+              <BaseTextField
+                :model-value="value"
+                :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_PRICE_PLACEHOLDER"
+                density="compact"
+                type="number"
+                :error-messages="errorMessage"
+                @update:model-value="handleChange"
+                @blur="handleBlur"
+              />
+            </Field>
+          </template>
 
-              <td>
-                <Field
-                  v-slot="{ value, handleChange, handleBlur, errorMessage }"
-                  :name="`variants[${index}].price`"
-                >
-                  <BaseTextField
-                    :model-value="value"
-                    :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_PRICE_PLACEHOLDER"
-                    density="compact"
-                    type="number"
-                    :error-messages="errorMessage"
-                    @update:model-value="handleChange"
-                    @blur="handleBlur"
-                  />
-                </Field>
-              </td>
+          <template #[variantSlots.fakePrice]="{ index }">
+            <Field
+              v-slot="{ value, handleChange, handleBlur, errorMessage }"
+              :name="`variants[${index}].fake_price`"
+            >
+              <BaseTextField
+                :model-value="value"
+                :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_FAKE_PRICE_PLACEHOLDER"
+                density="compact"
+                type="number"
+                :error-messages="errorMessage"
+                @update:model-value="handleChange"
+                @blur="handleBlur"
+              />
+            </Field>
+          </template>
 
-              <td>
-                <Field
-                  v-slot="{ value, handleChange, handleBlur, errorMessage }"
-                  :name="`variants[${index}].fake_price`"
-                >
-                  <BaseTextField
-                    :model-value="value"
-                    :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_FAKE_PRICE_PLACEHOLDER"
-                    density="compact"
-                    type="number"
-                    :error-messages="errorMessage"
-                    @update:model-value="handleChange"
-                    @blur="handleBlur"
-                  />
-                </Field>
-              </td>
+          <template #[variantSlots.available]="{ index }">
+            <Field
+              v-slot="{ value, handleChange, handleBlur, errorMessage }"
+              :name="`variants[${index}].available_quantity`"
+            >
+              <BaseTextField
+                :model-value="value"
+                :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_AVAILABLE_PLACEHOLDER"
+                density="compact"
+                type="number"
+                :error-messages="errorMessage"
+                @update:model-value="handleChange($event === '' ? undefined : Number($event))"
+                @blur="handleBlur"
+              />
+            </Field>
+          </template>
 
-              <td>
-                <Field
-                  v-slot="{ value, handleChange, handleBlur, errorMessage }"
-                  :name="`variants[${index}].available_quantity`"
-                >
-                  <BaseTextField
-                    :model-value="value"
-                    :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_AVAILABLE_PLACEHOLDER"
-                    density="compact"
-                    type="number"
-                    :error-messages="errorMessage"
-                    @update:model-value="handleChange($event === '' ? undefined : Number($event))"
-                    @blur="handleBlur"
-                  />
-                </Field>
-              </td>
+          <template #[variantSlots.onHand]="{ index }">
+            <Field
+              v-slot="{ value, handleChange, handleBlur, errorMessage }"
+              :name="`variants[${index}].on_hand_quantity`"
+            >
+              <BaseTextField
+                :model-value="value"
+                :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_ON_HAND_PLACEHOLDER"
+                density="compact"
+                type="number"
+                :error-messages="errorMessage"
+                @update:model-value="handleChange($event === '' ? undefined : Number($event))"
+                @blur="handleBlur"
+              />
+            </Field>
+          </template>
 
-              <td>
-                <Field
-                  v-slot="{ value, handleChange, handleBlur, errorMessage }"
-                  :name="`variants[${index}].on_hand_quantity`"
-                >
-                  <BaseTextField
-                    :model-value="value"
-                    :placeholder="UI_STRINGS.PRODUCTS.FORM.VARIANT_ON_HAND_PLACEHOLDER"
-                    density="compact"
-                    type="number"
-                    :error-messages="errorMessage"
-                    @update:model-value="handleChange($event === '' ? undefined : Number($event))"
-                    @blur="handleBlur"
-                  />
-                </Field>
-              </td>
+          <template #[variantSlots.status]="{ index }">
+            <Field
+              v-slot="{ value, handleChange, errorMessage }"
+              :name="`variants[${index}].status`"
+            >
+              <BaseSelect
+                :model-value="value"
+                :items="statusOptions"
+                density="compact"
+                :error-messages="errorMessage"
+                @update:model-value="handleChange"
+              />
+            </Field>
+          </template>
 
-              <td>
-                <Field
-                  v-slot="{ value, handleChange, errorMessage }"
-                  :name="`variants[${index}].status`"
-                >
-                  <BaseSelect
-                    :model-value="value"
-                    :items="statusOptions"
-                    density="compact"
-                    :error-messages="errorMessage"
-                    @update:model-value="handleChange"
-                  />
-                </Field>
-              </td>
+          <template #[variantSlots.images]="{ item, index }">
+            <div class="d-flex flex-wrap ga-1 mb-2">
+              <VImg
+                v-for="(image, imageIndex) in item.value.product_variant_image"
+                :key="`${item.key}-${imageIndex}`"
+                :src="image"
+                width="38"
+                height="38"
+                cover
+                rounded
+              />
+            </div>
 
-              <td class="variant-images-cell">
-                <div class="d-flex flex-wrap ga-1 mb-2">
-                  <VImg
-                    v-for="(image, imageIndex) in entry.value.product_variant_image"
-                    :key="`${entry.key}-${imageIndex}`"
-                    :src="image"
-                    width="38"
-                    height="38"
-                    cover
-                    rounded
-                  />
-                </div>
+            <VFileInput
+              accept="image/*"
+              prepend-icon="mdi-image-plus-outline"
+              hide-input
+              :model-value="null"
+              :aria-label="`${UI_STRINGS.PRODUCTS.FORM.UPLOAD_VARIANT_IMAGE} ${index + 1}`"
+              :error-messages="imageErrors[index]"
+              hide-details="auto"
+              :loading="imageUploadingIndex === index"
+              :disabled="imageUploadingIndex !== null"
+              @update:model-value="handleImageChange(index, $event)"
+            />
+          </template>
 
-                <VFileInput
-                  accept="image/*"
-                  prepend-icon="mdi-image-plus-outline"
-                  hide-input
-                  :model-value="null"
-                  :aria-label="`${UI_STRINGS.PRODUCTS.FORM.UPLOAD_VARIANT_IMAGE} ${index + 1}`"
-                  :error-messages="imageErrors[index]"
-                  hide-details="auto"
-                  :loading="imageUploadingIndex === index"
-                  :disabled="imageUploadingIndex !== null"
-                  @update:model-value="handleImageChange(index, $event)"
-                />
-              </td>
-
-              <td>
-                <VBtn
-                  icon="mdi-delete-outline"
-                  color="error"
-                  variant="text"
-                  size="small"
-                  :disabled="fields.length === 1 || imageUploadingIndex !== null"
-                  :aria-label="`${UI_STRINGS.PRODUCTS.FORM.REMOVE_VARIANT} ${index + 1}`"
-                  @click="removeVariant(index)"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </VTable>
+          <template #[variantSlots.actions]="{ index }">
+            <VBtn
+              icon="mdi-delete-outline"
+              color="error"
+              variant="text"
+              size="small"
+              :disabled="fields.length === 1 || imageUploadingIndex !== null"
+              :aria-label="`${UI_STRINGS.PRODUCTS.FORM.REMOVE_VARIANT} ${index + 1}`"
+              @click="removeVariant(index)"
+            />
+          </template>
+        </BaseTable>
       </div>
     </VCardText>
   </VCard>

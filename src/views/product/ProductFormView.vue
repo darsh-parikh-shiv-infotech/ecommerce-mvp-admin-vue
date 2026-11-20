@@ -381,7 +381,7 @@ onBeforeUnmount(() => {
       <span>{{ loadError }}</span>
 
       <BaseButton size="small" :block="false" @click="loadFormData">
-        {{ UI_STRINGS.PRODUCTS.RETRY }}
+        {{ UI_STRINGS.COMMON.RETRY }}
       </BaseButton>
     </div>
   </VAlert>
@@ -406,7 +406,7 @@ onBeforeUnmount(() => {
             color="secondary"
             @click="router.push({ name: ROUTE_NAMES.PRODUCTS })"
           >
-            {{ UI_STRINGS.PRODUCTS.FORM.CANCEL }}
+            {{ UI_STRINGS.COMMON.CANCEL }}
           </BaseButton>
         </VCol>
       </VRow>
@@ -522,7 +522,7 @@ onBeforeUnmount(() => {
         </div>
       </template>
 
-      <VSnackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
+      <VSnackbar v-model="snackbar.show" :color="snackbar.color" location="top end" timeout="3000">
         {{ snackbar.message }}
       </VSnackbar>
     </VContainer>
