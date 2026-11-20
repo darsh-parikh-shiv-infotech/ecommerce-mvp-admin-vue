@@ -133,6 +133,11 @@ export const UI_STRINGS = {
     OPEN_NAVIGATION: "Open navigation",
   },
 
+  TABLE: {
+    LOADING: "Loading records...",
+    EMPTY: "No records found.",
+  },
+
   LOGIN: {
     EYEBROW: "Ecommerce MVP",
     TITLE: "Welcome back",
